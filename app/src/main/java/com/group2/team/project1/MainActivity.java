@@ -4,12 +4,15 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.Point;
 import android.net.Uri;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -24,6 +27,7 @@ import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -72,6 +76,8 @@ public class MainActivity extends AppCompatActivity {
      * The {@link ViewPager} that will host the section contents.
      */
     private ViewPager mViewPager;
+
+    private String currentPath;
     private Bitmap bitmap;
 
     @Override
@@ -98,10 +104,36 @@ public class MainActivity extends AppCompatActivity {
         Log.i("cs496test", "result" + requestCode + "," + resultCode);
         if (resultCode == RESULT_OK) {
             //      if (requestCode == REQUEST_CAMERA_FROM_FREE) {
-            Bundle extras = data.getExtras();
-            bitmap = (Bitmap) extras.get("data");
+            setPic();
             //      }
         }
+    }
+
+    private void setPic() {
+        Display display = getWindowManager().getDefaultDisplay();
+        Point size = new Point();
+        display.getSize(size);
+
+        // Get the dimensions of the View
+        int targetW = size.x / 2;
+        int targetH = size.y / 3;
+
+        // Get the dimensions of the bitmap
+        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+        bmOptions.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(currentPath, bmOptions);
+        int photoW = bmOptions.outWidth;
+        int photoH = bmOptions.outHeight;
+
+        // Determine how much to scale down the image
+        int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
+
+        // Decode the image file into a Bitmap sized to fill the View
+        bmOptions.inJustDecodeBounds = false;
+        bmOptions.inSampleSize = scaleFactor;
+        bmOptions.inPurgeable = true;
+
+        bitmap = BitmapFactory.decodeFile(currentPath, bmOptions);
     }
 
     // Fragment class for A tab (Phone book)
@@ -160,7 +192,6 @@ public class MainActivity extends AppCompatActivity {
             super.onCreate(savedInstanceState);
 
             String data = readFile();
-            Log.i("cs496test", data);
             JSONArray array = null;
             if (data.length() == 0) {
                 array = new JSONArray();
@@ -172,13 +203,15 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
 
-            for (int i = 0; i < array.length(); i++) {
-                try {
-                    JSONObject object = array.getJSONObject(i);
-                    FreeItem item = new FreeItem(object.getLong("date"), object.getString("content"), object.getBoolean("photo"));
-                    items.add(item);
-                } catch (JSONException e) {
-                    e.printStackTrace();
+            if (array != null) {
+                for (int i = 0; i < array.length(); i++) {
+                    try {
+                        JSONObject object = array.getJSONObject(i);
+                        FreeItem item = new FreeItem(object.getLong("date"), object.getString("content"), object.getBoolean("photo"));
+                        items.add(item);
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                    }
                 }
             }
         }
@@ -196,7 +229,6 @@ public class MainActivity extends AppCompatActivity {
             recyclerView.setHasFixedSize(true);
             recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
             recyclerView.setAdapter(new FreeAdapter(getContext(), items));
-            Log.i("cs496test", items.toString());
 
             editText.addTextChangedListener(new TextWatcher() {
                 String previousString = "";
@@ -216,6 +248,10 @@ public class MainActivity extends AppCompatActivity {
                         editText.setText(previousString);
                         editText.setSelection(editText.length());
                     }
+                    if (s.toString().length() == 0)
+                        buttonSave.setEnabled(false);
+                    else
+                        buttonSave.setEnabled(true);
                 }
             });
 
@@ -248,7 +284,19 @@ public class MainActivity extends AppCompatActivity {
                 public void onClick(View v) {
                     if (buttonPhoto.getText().toString().equals(getString(R.string.free_add_photo))) {
                         Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                        startActivityForResult(intent, REQUEST_CAMERA_FROM_FREE);
+                        File file = null;
+                        try {
+                            file = createImageFile();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+                        // Continue only if the File was successfully created
+                        if (file != null) {
+                            Uri photoURI = FileProvider.getUriForFile(getActivity(), "com.group2.team.project1", file);
+                            intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                            if (intent.resolveActivity(getActivity().getPackageManager()) != null)
+                                startActivityForResult(intent, REQUEST_CAMERA_FROM_FREE);
+                        }
                         buttonPhoto.setText(R.string.free_remove_photo);
                     } else {
                         buttonPhoto.setText(R.string.free_add_photo);
@@ -275,7 +323,6 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
             writeFile(array.toString());
-            Log.i("cs496test", array.toString());
         }
 
         private String readFile() {
@@ -302,6 +349,17 @@ public class MainActivity extends AppCompatActivity {
                 e.printStackTrace();
             }
         }
+
+        private File createImageFile() throws IOException {
+            // Create an image file name
+            String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
+            String imageFileName = "JPEG_" + timeStamp + "_";
+            File storageDir = getActivity().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+            File image = File.createTempFile(imageFileName, ".jpg", storageDir);
+
+            ((MainActivity) getActivity()).currentPath = image.getAbsolutePath();
+            return image;
+        }
     }
 
     /**
@@ -312,7 +370,7 @@ public class MainActivity extends AppCompatActivity {
 
         MainActivity activity;
 
-        public SectionsPagerAdapter(FragmentManager fm, MainActivity activity) {
+        SectionsPagerAdapter(FragmentManager fm, MainActivity activity) {
             super(fm);
             this.activity = activity;
         }

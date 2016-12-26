@@ -32,6 +32,7 @@
                 android:layout_width="@dimen/free_button_width"
                 android:layout_height="match_parent"
                 android:layout_weight="1"
+                android:enabled="false"
                 android:text="@string/free_save" />
 
             <Button

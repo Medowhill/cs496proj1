@@ -18,10 +18,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-/**
- * Created by q on 2016-12-26.
- */
-
 public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
 
     private Context context;
@@ -36,8 +32,7 @@ public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
     @Override
     public ViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_free_cardview, parent, false);
-        ViewHolder holder = new ViewHolder(v);
-        return holder;
+        return new ViewHolder(v);
     }
 
     @Override
@@ -53,6 +48,7 @@ public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
                 holder.imageView.setImageBitmap(BitmapFactory.decodeByteArray(arr, 0, arr.length));
                 fis.close();
             } catch (IOException e) {
+                e.printStackTrace();
             }
         } else {
             holder.imageView.setImageBitmap(null);
@@ -64,12 +60,12 @@ public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
         return items.size();
     }
 
-    public class ViewHolder extends RecyclerView.ViewHolder {
+    class ViewHolder extends RecyclerView.ViewHolder {
 
-        public ImageView imageView;
-        public TextView textViewDate, textViewContent;
+        ImageView imageView;
+        TextView textViewDate, textViewContent;
 
-        public ViewHolder(View view) {
+        ViewHolder(View view) {
             super(view);
             imageView = (ImageView) view.findViewById(R.id.free_item_imageView);
             textViewDate = (TextView) view.findViewById(R.id.free_item_textView_date);

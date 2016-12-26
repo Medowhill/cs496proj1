@@ -10,7 +10,7 @@ public class FreeItem implements Comparable<FreeItem> {
     private String content;
     private boolean photo;
 
-    public FreeItem(long date, String content, boolean photo) {
+    FreeItem(long date, String content, boolean photo) {
         this.date = date;
         this.content = content;
         this.photo = photo;
