@@ -166,6 +166,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Fragment class for B tab (Gallery)
     public static class GalleryFragment extends Fragment {
+
         public static GalleryFragment newInstance() {
             GalleryFragment fragment = new GalleryFragment();
             return fragment;
