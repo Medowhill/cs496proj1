@@ -55,37 +55,49 @@ public class MainActivity extends AppCompatActivity {
         tabLayout.setupWithViewPager(mViewPager);
     }
 
-    /**
-     * A placeholder fragment containing a simple view.
-     */
-    public static class PlaceholderFragment extends Fragment {
-        /**
-         * The fragment argument representing the section number for this
-         * fragment.
-         */
-        private static final String ARG_SECTION_NUMBER = "section_number";
-
-        public PlaceholderFragment() {
-        }
-
-        /**
-         * Returns a new instance of this fragment for the given section
-         * number.
-         */
-        public static PlaceholderFragment newInstance(int sectionNumber) {
-            PlaceholderFragment fragment = new PlaceholderFragment();
-            Bundle args = new Bundle();
-            args.putInt(ARG_SECTION_NUMBER, sectionNumber);
-            fragment.setArguments(args);
+    // Fragment class for A tab (Phone book)
+    public static class PhoneNumberFragment extends Fragment {        public static PhoneNumberFragment newInstance() {
+            PhoneNumberFragment fragment = new PhoneNumberFragment();
             return fragment;
         }
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                                 Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_main, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.section_label);
-            textView.setText(getString(R.string.section_format, getArguments().getInt(ARG_SECTION_NUMBER)));
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.fragment_phone, container, false);
+            TextView textView = (TextView) rootView.findViewById(R.id.textView_phone);
+            textView.setText("Phone Number Fragment");
+            return rootView;
+        }
+    }
+
+    // Fragment class for B tab (Gallery)
+    public static class GalleryFragment extends Fragment {
+        public static GalleryFragment newInstance() {
+            GalleryFragment fragment = new GalleryFragment();
+            return fragment;
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
+            TextView textView = (TextView) rootView.findViewById(R.id.textView_gallery);
+            textView.setText("Gallery Fragment");
+            return rootView;
+        }
+    }
+
+    // Fragment class for C tab (Free)
+    public static class FreeFragment extends Fragment {
+        public static FreeFragment newInstance() {
+            FreeFragment fragment = new FreeFragment();
+            return fragment;
+        }
+
+        @Override
+        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            View rootView = inflater.inflate(R.layout.fragment_free, container, false);
+            TextView textView = (TextView) rootView.findViewById(R.id.textView_free);
+            textView.setText("Free Fragment");
             return rootView;
         }
     }
@@ -104,12 +116,19 @@ public class MainActivity extends AppCompatActivity {
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            return PlaceholderFragment.newInstance(position + 1);
+            switch(position) {
+                case 0:
+                    return PhoneNumberFragment.newInstance();
+                case 1:
+                    return GalleryFragment.newInstance();
+                case 2:
+                    return FreeFragment.newInstance();
+            }
+            return null;
         }
 
         @Override
         public int getCount() {
-            // Show 3 total pages.
             return 3;
         }
 
@@ -117,11 +136,11 @@ public class MainActivity extends AppCompatActivity {
         public CharSequence getPageTitle(int position) {
             switch (position) {
                 case 0:
-                    return "SECTION 1";
+                    return "A";
                 case 1:
-                    return "SECTION 2";
+                    return "B";
                 case 2:
-                    return "SECTION 3";
+                    return "C";
             }
             return null;
         }
