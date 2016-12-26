@@ -62,7 +62,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager(), this);
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
@@ -70,35 +70,6 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
-
-        FreeFragment.activity = this;
-    }
-
-    private String readFile(String name) {
-        File file = getFileStreamPath(name);
-        try {
-            FileInputStream stream = new FileInputStream(file);
-            byte[] arr = new byte[stream.available()];
-            stream.read(arr);
-            stream.close();
-            return new String(arr);
-        } catch (IOException e) {
-            e.printStackTrace();
-            return "";
-        }
-    }
-
-    private void writeFile(String name, String data) {
-        File file = getFileStreamPath(name);
-        try {
-            FileOutputStream stream = new FileOutputStream(file);
-            byte[] arr = data.getBytes();
-            stream.write(arr);
-            stream.flush();
-            stream.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
     }
 
     // Fragment class for A tab (Phone book)
@@ -137,21 +108,18 @@ public class MainActivity extends AppCompatActivity {
     // Fragment class for C tab (Free)
     public static class FreeFragment extends Fragment {
 
-        static MainActivity activity;
         final private String FILE_NAME = "FreeFragmentDataSave";
         private FloatingActionButton fab;
         private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
         public static FreeFragment newInstance() {
-            FreeFragment fragment = new FreeFragment();
-            return fragment;
+            return new FreeFragment();
         }
 
         @Override
         public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_free, container, false);
             fab = (FloatingActionButton) rootView.findViewById(R.id.free_fab);
-
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
@@ -165,7 +133,7 @@ public class MainActivity extends AppCompatActivity {
                             final EditText editText = (EditText) dialogView.findViewById(R.id.free_dialog_editText);
                             final CalendarView calendarView = (CalendarView) dialogView.findViewById(R.id.free_dialog_calendarView);
 
-                            String data = activity.readFile(FILE_NAME);
+                            String data = readFile();
                             JSONArray array = null;
                             if (data.length() == 0) {
                                 array = new JSONArray();
@@ -186,8 +154,7 @@ public class MainActivity extends AppCompatActivity {
                                 } catch (JSONException e) {
                                     e.printStackTrace();
                                 }
-                                Toast.makeText(getContext(), array.toString(), Toast.LENGTH_SHORT).show();
-                                activity.writeFile(FILE_NAME, array.toString());
+                                writeFile(array.toString());
                             }
                         }
                     });
@@ -197,6 +164,31 @@ public class MainActivity extends AppCompatActivity {
             });
             return rootView;
         }
+
+        private String readFile() {
+            try {
+                FileInputStream stream = getActivity().openFileInput(FILE_NAME);
+                byte[] arr = new byte[stream.available()];
+                stream.read(arr);
+                stream.close();
+                return new String(arr);
+            } catch (IOException e) {
+                e.printStackTrace();
+                return "";
+            }
+        }
+
+        private void writeFile(String data) {
+            try {
+                FileOutputStream stream = getActivity().openFileOutput(FILE_NAME, MODE_PRIVATE);
+                byte[] arr = data.getBytes();
+                stream.write(arr);
+                stream.flush();
+                stream.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
     }
 
     /**
@@ -205,8 +197,11 @@ public class MainActivity extends AppCompatActivity {
      */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-        public SectionsPagerAdapter(FragmentManager fm) {
+        MainActivity activity;
+
+        public SectionsPagerAdapter(FragmentManager fm, MainActivity activity) {
             super(fm);
+            this.activity = activity;
         }
 
         @Override
