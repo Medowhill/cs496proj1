@@ -1,6 +1,6 @@
 package com.group2.team.project1;
 
-import android.content.DialogInterface;
+import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -34,8 +34,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.AdapterView;
 import android.widget.Button;
-import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -57,6 +57,18 @@ import java.util.Calendar;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import android.widget.AbsListView;
+import android.widget.AdapterView.OnItemClickListener;
+import android.widget.BaseAdapter;
+import android.widget.Gallery;
+import android.widget.ImageView;
+
+import com.group2.team.project1.R;
+import com.group2.team.project1.adapter.GalleryAdapter;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -89,7 +101,7 @@ public class MainActivity extends AppCompatActivity {
         setSupportActionBar(toolbar);
         // Create the adapter that will return a fragment for each of the three
         // primary sections of the activity.
-        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager(), this);
+        mSectionsPagerAdapter = new SectionsPagerAdapter(getSupportFragmentManager());
 
         // Set up the ViewPager with the sections adapter.
         mViewPager = (ViewPager) findViewById(R.id.container);
@@ -154,7 +166,6 @@ public class MainActivity extends AppCompatActivity {
 
     // Fragment class for B tab (Gallery)
     public static class GalleryFragment extends Fragment {
-
         public static GalleryFragment newInstance() {
             GalleryFragment fragment = new GalleryFragment();
             return fragment;
@@ -163,8 +174,22 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.textView_gallery);
-            textView.setText("Gallery Fragment");
+
+            final GalleryAdapter adapter = new GalleryAdapter(getContext());
+            for (int i = 1; i < 10; i++) {
+                adapter.add(getResources().getIdentifier("t" + i, "drawable", getActivity().getPackageName()));
+            }
+
+            final ImageView iv1 = (ImageView) rootView.findViewById(R.id.imageView1);
+
+            Gallery g = (Gallery) rootView.findViewById(R.id.gallery1);
+            g.setAdapter(adapter);
+            g.setOnItemClickListener(new OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    iv1.setImageResource(adapter.get(position));
+                }
+            });
             return rootView;
         }
     }
@@ -368,11 +393,8 @@ public class MainActivity extends AppCompatActivity {
      */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-        MainActivity activity;
-
-        SectionsPagerAdapter(FragmentManager fm, MainActivity activity) {
+        public SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
-            this.activity = activity;
         }
 
         @Override
