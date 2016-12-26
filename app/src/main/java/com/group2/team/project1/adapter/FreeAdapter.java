@@ -46,12 +46,14 @@ public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
                 byte[] arr = new byte[fis.available()];
                 fis.read(arr);
                 holder.imageView.setImageBitmap(BitmapFactory.decodeByteArray(arr, 0, arr.length));
+                holder.imageView.setVisibility(View.VISIBLE);
                 fis.close();
             } catch (IOException e) {
                 e.printStackTrace();
             }
         } else {
             holder.imageView.setImageBitmap(null);
+            holder.imageView.setVisibility(View.GONE);
         }
     }
 

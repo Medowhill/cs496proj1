@@ -4,7 +4,7 @@ package com.group2.team.project1;
  * Created by q on 2016-12-26.
  */
 
-public class FreeItem implements Comparable<FreeItem> {
+public class FreeItem {
 
     private long date;
     private String content;
@@ -38,10 +38,5 @@ public class FreeItem implements Comparable<FreeItem> {
 
     public void setPhoto(boolean photo) {
         this.photo = photo;
-    }
-
-    @Override
-    public int compareTo(FreeItem o) {
-        return (int) ((o.date - this.date) / Math.abs(o.date - this.date));
     }
 }

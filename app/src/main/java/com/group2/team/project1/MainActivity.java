@@ -34,6 +34,8 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
@@ -118,6 +120,7 @@ public class MainActivity extends AppCompatActivity {
             if (resultCode == RESULT_OK) {
                 setPic();
                 Fragment fragment = mSectionsPagerAdapter.fragments[2];
+                Log.i("cs496test", fragment + "");
                 if (fragment != null)
                     ((FreeFragment) fragment).setButtonPhoto();
             }
@@ -130,8 +133,8 @@ public class MainActivity extends AppCompatActivity {
         display.getSize(size);
 
         // Get the dimensions of the View
-        int targetW = size.x / 2;
-        int targetH = size.y / 3;
+        int targetW = size.x / 4;
+        int targetH = size.y / 6;
 
         // Get the dimensions of the bitmap
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
@@ -206,6 +209,7 @@ public class MainActivity extends AppCompatActivity {
         private RecyclerView recyclerView;
         private EditText editText;
         private Button buttonSave, buttonPhoto;
+        private Animation animation;
 
         public FreeFragment() {
             items = new ArrayList<>();
@@ -248,6 +252,7 @@ public class MainActivity extends AppCompatActivity {
         public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             super.onCreateView(inflater, container, savedInstanceState);
 
+            animation = AnimationUtils.loadAnimation(getContext(), R.anim.free_recyclerview_save);
             View rootView = inflater.inflate(R.layout.fragment_free, container, false);
             recyclerView = (RecyclerView) rootView.findViewById(R.id.free_recyclerView);
             editText = (EditText) rootView.findViewById(R.id.free_editText);
@@ -304,6 +309,7 @@ public class MainActivity extends AppCompatActivity {
                     editText.setText("");
                     items.add(0, item);
                     recyclerView.getAdapter().notifyDataSetChanged();
+                    recyclerView.startAnimation(animation);
                 }
             });
 
@@ -409,7 +415,7 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
-            // Return a PlaceholderFragment (defined as a static inner class below).
+            Log.i("cs496test", position + "");
             switch (position) {
                 case 0:
                     return fragments[0] = PhoneNumberFragment.newInstance();
