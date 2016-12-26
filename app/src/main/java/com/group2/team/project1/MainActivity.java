@@ -113,11 +113,14 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.i("cs496test", "result" + requestCode + "," + resultCode);
-        if (resultCode == RESULT_OK) {
-            //      if (requestCode == REQUEST_CAMERA_FROM_FREE) {
-            setPic();
-            //      }
+        Log.i("cs496test", requestCode + "," + resultCode);
+        if (requestCode == REQUEST_CAMERA_FROM_FREE) {
+            if (resultCode == RESULT_OK) {
+                setPic();
+                Fragment fragment = mSectionsPagerAdapter.fragments[2];
+                if (fragment != null)
+                    ((FreeFragment) fragment).setButtonPhoto();
+            }
         }
     }
 
@@ -168,8 +171,7 @@ public class MainActivity extends AppCompatActivity {
     public static class GalleryFragment extends Fragment {
 
         public static GalleryFragment newInstance() {
-            GalleryFragment fragment = new GalleryFragment();
-            return fragment;
+            return new GalleryFragment();
         }
 
         @Override
@@ -321,9 +323,8 @@ public class MainActivity extends AppCompatActivity {
                             Uri photoURI = FileProvider.getUriForFile(getActivity(), "com.group2.team.project1", file);
                             intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                             if (intent.resolveActivity(getActivity().getPackageManager()) != null)
-                                startActivityForResult(intent, REQUEST_CAMERA_FROM_FREE);
+                                getActivity().startActivityForResult(intent, REQUEST_CAMERA_FROM_FREE);
                         }
-                        buttonPhoto.setText(R.string.free_remove_photo);
                     } else {
                         buttonPhoto.setText(R.string.free_add_photo);
                     }
@@ -386,6 +387,11 @@ public class MainActivity extends AppCompatActivity {
             ((MainActivity) getActivity()).currentPath = image.getAbsolutePath();
             return image;
         }
+
+        void setButtonPhoto() {
+            if (buttonPhoto != null)
+                buttonPhoto.setText(R.string.free_remove_photo);
+        }
     }
 
     /**
@@ -394,7 +400,9 @@ public class MainActivity extends AppCompatActivity {
      */
     public class SectionsPagerAdapter extends FragmentPagerAdapter {
 
-        public SectionsPagerAdapter(FragmentManager fm) {
+        Fragment[] fragments = new Fragment[3];
+
+        SectionsPagerAdapter(FragmentManager fm) {
             super(fm);
         }
 
@@ -404,11 +412,11 @@ public class MainActivity extends AppCompatActivity {
             // Return a PlaceholderFragment (defined as a static inner class below).
             switch (position) {
                 case 0:
-                    return PhoneNumberFragment.newInstance();
+                    return fragments[0] = PhoneNumberFragment.newInstance();
                 case 1:
-                    return GalleryFragment.newInstance();
+                    return fragments[1] = GalleryFragment.newInstance();
                 case 2:
-                    return FreeFragment.newInstance();
+                    return fragments[2] = FreeFragment.newInstance();
             }
             return null;
         }
