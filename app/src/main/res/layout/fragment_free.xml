@@ -1,18 +1,51 @@
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
-    android:paddingTop="@dimen/activity_vertical_margin">
+    android:orientation="vertical"
+    android:paddingBottom="@dimen/free_margin"
+    android:paddingLeft="@dimen/free_margin"
+    android:paddingRight="@dimen/free_margin"
+    android:paddingTop="@dimen/free_margin">
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/free_fab"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="right|bottom"
-        android:layout_margin="@dimen/fab_margin"
-        app:srcCompat="@android:drawable/ic_input_add" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
-</FrameLayout>
+        <EditText
+            android:id="@+id/free_editText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/free_margin"
+            android:layout_weight="1"
+            android:gravity="top"
+            android:lines="5"
+            android:maxLines="5" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            android:paddingBottom="@dimen/free_button_bottom_padding">
+
+            <Button
+                android:id="@+id/free_button_save"
+                android:layout_width="@dimen/free_button_width"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/free_save" />
+
+            <Button
+                android:id="@+id/free_button_photo"
+                android:layout_width="@dimen/free_button_width"
+                android:layout_height="match_parent"
+                android:layout_weight="1"
+                android:text="@string/free_add_photo" />
+
+        </LinearLayout>
+    </LinearLayout>
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/free_recyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</LinearLayout>

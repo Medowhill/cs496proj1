@@ -1,6 +1,10 @@
 <resources>
     <string name="app_name">Project1</string>
-    
+
     <string name="cancel">cancel</string>
     <string name="ok">ok</string>
+
+    <string name="free_save">save</string>
+    <string name="free_add_photo">add\nphoto</string>
+    <string name="free_remove_photo">remove\nphoto</string>
 </resources>

@@ -1,11 +1,19 @@
 package com.group2.team.project1;
 
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
+import android.provider.MediaStore;
+import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 
 import android.support.v4.app.Fragment;
@@ -13,16 +21,22 @@ import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.Button;
 import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.group2.team.project1.adapter.FreeAdapter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -34,9 +48,15 @@ import java.io.FileOutputStream;
 import java.io.IOError;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
+
+    final private static int REQUEST_CAMERA_FROM_FREE = 1;
 
     /**
      * The {@link android.support.v4.view.PagerAdapter} that will provide
@@ -52,6 +72,7 @@ public class MainActivity extends AppCompatActivity {
      * The {@link ViewPager} that will host the section contents.
      */
     private ViewPager mViewPager;
+    private Bitmap bitmap;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -70,6 +91,17 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.i("cs496test", "result" + requestCode + "," + resultCode);
+        if (resultCode == RESULT_OK) {
+            //      if (requestCode == REQUEST_CAMERA_FROM_FREE) {
+            Bundle extras = data.getExtras();
+            bitmap = (Bitmap) extras.get("data");
+            //      }
+        }
     }
 
     // Fragment class for A tab (Phone book)
@@ -109,60 +141,141 @@ public class MainActivity extends AppCompatActivity {
     public static class FreeFragment extends Fragment {
 
         final private String FILE_NAME = "FreeFragmentDataSave";
-        private FloatingActionButton fab;
-        private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+        private ArrayList<FreeItem> items;
+
+        private RecyclerView recyclerView;
+        private EditText editText;
+        private Button buttonSave, buttonPhoto;
+
+        public FreeFragment() {
+            items = new ArrayList<>();
+        }
 
         public static FreeFragment newInstance() {
             return new FreeFragment();
         }
 
         @Override
+        public void onCreate(@Nullable Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+
+            String data = readFile();
+            Log.i("cs496test", data);
+            JSONArray array = null;
+            if (data.length() == 0) {
+                array = new JSONArray();
+            } else {
+                try {
+                    array = new JSONArray(data);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            for (int i = 0; i < array.length(); i++) {
+                try {
+                    JSONObject object = array.getJSONObject(i);
+                    FreeItem item = new FreeItem(object.getLong("date"), object.getString("content"), object.getBoolean("photo"));
+                    items.add(item);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+
+        @Override
         public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            super.onCreateView(inflater, container, savedInstanceState);
+
             View rootView = inflater.inflate(R.layout.fragment_free, container, false);
-            fab = (FloatingActionButton) rootView.findViewById(R.id.free_fab);
-            fab.setOnClickListener(new View.OnClickListener() {
+            recyclerView = (RecyclerView) rootView.findViewById(R.id.free_recyclerView);
+            editText = (EditText) rootView.findViewById(R.id.free_editText);
+            buttonSave = (Button) rootView.findViewById(R.id.free_button_save);
+            buttonPhoto = (Button) rootView.findViewById(R.id.free_button_photo);
+
+            recyclerView.setHasFixedSize(true);
+            recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+            recyclerView.setAdapter(new FreeAdapter(getContext(), items));
+            Log.i("cs496test", items.toString());
+
+            editText.addTextChangedListener(new TextWatcher() {
+                String previousString = "";
+
+                @Override
+                public void onTextChanged(CharSequence s, int start, int before, int count) {
+                }
+
+                @Override
+                public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                    previousString = s.toString();
+                }
+
+                @Override
+                public void afterTextChanged(Editable s) {
+                    if (editText.getLineCount() > 5) {
+                        editText.setText(previousString);
+                        editText.setSelection(editText.length());
+                    }
+                }
+            });
+
+            buttonSave.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    final View dialogView = inflater.inflate(R.layout.dialog_free, null);
-                    final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                    builder.setView(dialogView);
-                    builder.setNegativeButton(R.string.cancel, null);
-                    builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            final EditText editText = (EditText) dialogView.findViewById(R.id.free_dialog_editText);
-                            final CalendarView calendarView = (CalendarView) dialogView.findViewById(R.id.free_dialog_calendarView);
-
-                            String data = readFile();
-                            JSONArray array = null;
-                            if (data.length() == 0) {
-                                array = new JSONArray();
-                            } else {
-                                try {
-                                    array = new JSONArray(data);
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-
-                            if (array != null) {
-                                JSONObject object = new JSONObject();
-                                try {
-                                    object.put("date", calendarView.getDate());
-                                    object.put("content", editText.getText().toString());
-                                    array.put(object);
-                                } catch (JSONException e) {
-                                    e.printStackTrace();
-                                }
-                                writeFile(array.toString());
-                            }
+                    boolean photo = buttonPhoto.getText().toString().equals(getString(R.string.free_remove_photo));
+                    long time = Calendar.getInstance().getTime().getTime();
+                    FreeItem item = new FreeItem(time, editText.getText().toString(), photo);
+                    if (photo) {
+                        Bitmap bitmap = ((MainActivity) getActivity()).bitmap;
+                        try {
+                            FileOutputStream fos = getActivity().openFileOutput(time + "", MODE_PRIVATE);
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+                            fos.close();
+                        } catch (Exception e) {
+                            e.printStackTrace();
                         }
-                    });
-                    builder.setCancelable(true);
-                    builder.show();
+                        bitmap.recycle();
+                        buttonPhoto.setText(R.string.free_add_photo);
+                    }
+                    editText.setText("");
+                    items.add(0, item);
+                    recyclerView.getAdapter().notifyDataSetChanged();
+                }
+            });
+
+            buttonPhoto.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    if (buttonPhoto.getText().toString().equals(getString(R.string.free_add_photo))) {
+                        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                        startActivityForResult(intent, REQUEST_CAMERA_FROM_FREE);
+                        buttonPhoto.setText(R.string.free_remove_photo);
+                    } else {
+                        buttonPhoto.setText(R.string.free_add_photo);
+                    }
                 }
             });
             return rootView;
+        }
+
+        @Override
+        public void onDestroy() {
+            super.onDestroy();
+
+            JSONArray array = new JSONArray();
+            for (FreeItem item : items) {
+                JSONObject object = new JSONObject();
+                try {
+                    object.put("date", item.getDate());
+                    object.put("content", item.getContent());
+                    object.put("photo", item.isPhoto());
+                    array.put(object);
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+            }
+            writeFile(array.toString());
+            Log.i("cs496test", array.toString());
         }
 
         private String readFile() {
