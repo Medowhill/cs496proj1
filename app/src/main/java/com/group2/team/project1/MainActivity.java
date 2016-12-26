@@ -1,8 +1,10 @@
 package com.group2.team.project1;
 
+import android.content.DialogInterface;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
@@ -17,7 +19,22 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 
+import android.widget.CalendarView;
+import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOError;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -53,10 +70,40 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
+
+        FreeFragment.activity = this;
+    }
+
+    private String readFile(String name) {
+        File file = getFileStreamPath(name);
+        try {
+            FileInputStream stream = new FileInputStream(file);
+            byte[] arr = new byte[stream.available()];
+            stream.read(arr);
+            stream.close();
+            return new String(arr);
+        } catch (IOException e) {
+            e.printStackTrace();
+            return "";
+        }
+    }
+
+    private void writeFile(String name, String data) {
+        File file = getFileStreamPath(name);
+        try {
+            FileOutputStream stream = new FileOutputStream(file);
+            byte[] arr = data.getBytes();
+            stream.write(arr);
+            stream.flush();
+            stream.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     // Fragment class for A tab (Phone book)
-    public static class PhoneNumberFragment extends Fragment {        public static PhoneNumberFragment newInstance() {
+    public static class PhoneNumberFragment extends Fragment {
+        public static PhoneNumberFragment newInstance() {
             PhoneNumberFragment fragment = new PhoneNumberFragment();
             return fragment;
         }
@@ -72,6 +119,7 @@ public class MainActivity extends AppCompatActivity {
 
     // Fragment class for B tab (Gallery)
     public static class GalleryFragment extends Fragment {
+
         public static GalleryFragment newInstance() {
             GalleryFragment fragment = new GalleryFragment();
             return fragment;
@@ -88,16 +136,65 @@ public class MainActivity extends AppCompatActivity {
 
     // Fragment class for C tab (Free)
     public static class FreeFragment extends Fragment {
+
+        static MainActivity activity;
+        final private String FILE_NAME = "FreeFragmentDataSave";
+        private FloatingActionButton fab;
+        private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+
         public static FreeFragment newInstance() {
             FreeFragment fragment = new FreeFragment();
             return fragment;
         }
 
         @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        public View onCreateView(final LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
             View rootView = inflater.inflate(R.layout.fragment_free, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.textView_free);
-            textView.setText("Free Fragment");
+            fab = (FloatingActionButton) rootView.findViewById(R.id.free_fab);
+
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    final View dialogView = inflater.inflate(R.layout.dialog_free, null);
+                    final AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                    builder.setView(dialogView);
+                    builder.setNegativeButton(R.string.cancel, null);
+                    builder.setPositiveButton(R.string.ok, new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            final EditText editText = (EditText) dialogView.findViewById(R.id.free_dialog_editText);
+                            final CalendarView calendarView = (CalendarView) dialogView.findViewById(R.id.free_dialog_calendarView);
+
+                            String data = activity.readFile(FILE_NAME);
+                            JSONArray array = null;
+                            if (data.length() == 0) {
+                                array = new JSONArray();
+                            } else {
+                                try {
+                                    array = new JSONArray(data);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
+                            if (array != null) {
+                                JSONObject object = new JSONObject();
+                                try {
+                                    object.put("date", calendarView.getDate());
+                                    object.put("content", editText.getText().toString());
+                                    array.put(object);
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                                Toast.makeText(getContext(), array.toString(), Toast.LENGTH_SHORT).show();
+                                activity.writeFile(FILE_NAME, array.toString());
+                            }
+                        }
+                    });
+                    builder.setCancelable(true);
+                    builder.show();
+                }
+            });
             return rootView;
         }
     }
@@ -116,7 +213,7 @@ public class MainActivity extends AppCompatActivity {
         public Fragment getItem(int position) {
             // getItem is called to instantiate the fragment for the given page.
             // Return a PlaceholderFragment (defined as a static inner class below).
-            switch(position) {
+            switch (position) {
                 case 0:
                     return PhoneNumberFragment.newInstance();
                 case 1:
