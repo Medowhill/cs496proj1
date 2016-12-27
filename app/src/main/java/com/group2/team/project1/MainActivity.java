@@ -73,19 +73,13 @@ import android.widget.ImageView;
 import com.group2.team.project1.R;
 import com.group2.team.project1.adapter.GalleryAdapter;
 import com.group2.team.project1.fragment.FreeFragment;
+import com.group2.team.project1.fragment.GalleryFragment;
+import com.group2.team.project1.fragment.PhoneNumberFragment;
 
 public class MainActivity extends AppCompatActivity {
 
     final public static int REQUEST_CAMERA_FROM_FREE = 1;
 
-    /**
-     * The {@link android.support.v4.view.PagerAdapter} that will provide
-     * fragments for each of the sections. We use a
-     * {@link FragmentPagerAdapter} derivative, which will keep every
-     * loaded fragment in memory. If this becomes too memory intensive, it
-     * may be best to switch to a
-     * {@link android.support.v4.app.FragmentStatePagerAdapter}.
-     */
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
     private ViewPager mViewPager;
@@ -121,6 +115,8 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("cs496test", fragment + "");
                 if (fragment != null)
                     ((FreeFragment) fragment).setButtonPhoto();
+                else
+                    Toast.makeText(getApplicationContext(), "Fail to load the photo! Please go to A tab and come back to C tab.", Toast.LENGTH_LONG).show();
             }
         }
     }
@@ -160,56 +156,6 @@ public class MainActivity extends AppCompatActivity {
         this.currentPath = currentPath;
     }
 
-    // Fragment class for A tab (Phone book)
-    public static class PhoneNumberFragment extends Fragment {
-        public static PhoneNumberFragment newInstance() {
-            PhoneNumberFragment fragment = new PhoneNumberFragment();
-            return fragment;
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_phone, container, false);
-            TextView textView = (TextView) rootView.findViewById(R.id.textView_phone);
-            textView.setText("Phone Number Fragment");
-            return rootView;
-        }
-    }
-
-    // Fragment class for B tab (Gallery)
-    public static class GalleryFragment extends Fragment {
-
-        public static GalleryFragment newInstance() {
-            return new GalleryFragment();
-        }
-
-        @Override
-        public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-            View rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
-
-            final GalleryAdapter adapter = new GalleryAdapter(getContext());
-            for (int i = 1; i < 10; i++) {
-                adapter.add(getResources().getIdentifier("t" + i, "drawable", getActivity().getPackageName()));
-            }
-
-            final ImageView iv1 = (ImageView) rootView.findViewById(R.id.imageView1);
-
-            Gallery g = (Gallery) rootView.findViewById(R.id.gallery1);
-            g.setAdapter(adapter);
-            g.setOnItemClickListener(new OnItemClickListener() {
-                @Override
-                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                    iv1.setImageResource(adapter.get(position));
-                }
-            });
-            return rootView;
-        }
-    }
-
-    /**
-     * A {@link FragmentPagerAdapter} that returns a fragment corresponding to
-     * one of the sections/tabs/pages.
-     */
     public class SectionsPagerAdapter extends FragmentStatePagerAdapter {
 
         Fragment[] fragments = new Fragment[3];
