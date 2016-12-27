@@ -1,16 +1,13 @@
 package com.group2.team.project1;
 
-/**
- * Created by q on 2016-12-26.
- */
-
+// item for C tab (memo)
 public class FreeItem {
 
     private long date;
     private String content;
     private boolean photo;
 
-    FreeItem(long date, String content, boolean photo) {
+    public FreeItem(long date, String content, boolean photo) {
         this.date = date;
         this.content = content;
         this.photo = photo;
