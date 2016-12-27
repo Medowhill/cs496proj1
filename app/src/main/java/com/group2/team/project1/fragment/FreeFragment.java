@@ -3,6 +3,7 @@ package com.group2.team.project1.fragment;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -10,6 +11,7 @@ import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -21,6 +23,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 import com.group2.team.project1.FreeItem;
 import com.group2.team.project1.MainActivity;
@@ -157,20 +160,37 @@ public class FreeFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 if (buttonPhoto.getText().toString().equals(getString(R.string.free_add_photo))) {
-                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    File file = null;
-                    try {
-                        file = createImageFile();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    // Continue only if the File was successfully created
-                    if (file != null) {
-                        Uri photoURI = FileProvider.getUriForFile(getActivity(), "com.group2.team.project1", file);
-                        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                        if (intent.resolveActivity(getActivity().getPackageManager()) != null)
-                            getActivity().startActivityForResult(intent, MainActivity.REQUEST_CAMERA_FROM_FREE);
-                    }
+                    View view = inflater.inflate(R.layout.dialog_free_photo, null);
+                    final AlertDialog dialog = new AlertDialog.Builder(getActivity(), R.style.CustomDialog).create();
+                    dialog.setView(view);
+                    dialog.show();
+
+                    ImageButton buttonCamera = (ImageButton) view.findViewById(R.id.free_imageButton_camera), buttonGallery = (ImageButton) view.findViewById(R.id.free_imageButton_gallery);
+                    buttonCamera.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            dialog.dismiss();
+                            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                            File file = null;
+                            try {
+                                file = createImageFile();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            if (file != null) {
+                                Uri photoURI = FileProvider.getUriForFile(getActivity(), "com.group2.team.project1", file);
+                                intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                                if (intent.resolveActivity(getActivity().getPackageManager()) != null)
+                                    getActivity().startActivityForResult(intent, MainActivity.REQUEST_CAMERA_FROM_FREE);
+                            }
+                        }
+                    });
+                    buttonGallery.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            dialog.dismiss();
+                        }
+                    });
                 } else {
                     buttonPhoto.setText(R.string.free_add_photo);
                 }

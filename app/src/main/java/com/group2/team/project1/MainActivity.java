@@ -127,8 +127,8 @@ public class MainActivity extends AppCompatActivity {
         display.getSize(size);
 
         // Get the dimensions of the View
-        int targetW = size.x / 4;
-        int targetH = size.y / 6;
+        int targetW = size.x / 2;
+        int targetH = size.y / 3;
 
         // Get the dimensions of the bitmap
         BitmapFactory.Options bmOptions = new BitmapFactory.Options();
