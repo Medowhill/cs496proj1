@@ -32,6 +32,7 @@ public class MainActivity extends AppCompatActivity {
     final private static int PHOTO_WIDTH_MAX = 1440, PHOTO_HEIGHT_MAX = 1440;
 
     final public static int REQUEST_CONTACT_ADD = 3;
+    final public static int REQUEST_CONTACT_MODIFY = 4;
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
@@ -95,6 +96,15 @@ public class MainActivity extends AppCompatActivity {
             case REQUEST_CONTACT_ADD:
                 if(resultCode == RESULT_OK){
                     Toast.makeText(getApplicationContext(), "add tried", Toast.LENGTH_LONG).show();
+                    Fragment fragment = mSectionsPagerAdapter.fragments[0];
+
+                    if(fragment != null){
+                        ((PhoneNumberFragment)fragment).addData(data.getBundleExtra("data"));
+                    }
+                }
+                break;
+            case REQUEST_CONTACT_MODIFY:
+                if(resultCode == RESULT_OK){
                     Fragment fragment = mSectionsPagerAdapter.fragments[0];
 
                     if(fragment != null){

@@ -34,6 +34,7 @@ public class PhoneNumberFragment extends Fragment {
     private FloatingActionButton addButton = null;
     private ArrayList<Contact> contactsList;
     private ListView mListView;
+    View.OnClickListener mOnClickListener = null;
 
     public static PhoneNumberFragment newInstance() {
         return new PhoneNumberFragment();
@@ -76,16 +77,48 @@ public class PhoneNumberFragment extends Fragment {
             }
         }
 
-        mContactsAdapter = new ContactsAdapter(getActivity(), R.layout.contacts_list_item, R.id.contacts_item_name_text, contactsList);
+        mOnClickListener = new View.OnClickListener(){
+            @Override
+            public void onClick(View v){
+                switch(v.getId()){
+                    case R.id.contacts_item_edit_button:
+                    {
+                        int position = (Integer) v.getTag();
+                        Contact contact = mContactsAdapter.getItem(position);
+                        Intent newIntent = new Intent(getActivity(), AddContactActivity.class);
+                        Bundle newBundle = new Bundle();
+                        newBundle.putString("name", contact.mName);
+                        newBundle.putString("phoneNumber", contact.mPhoneNumber);
+                        newBundle.putInt("position", position);
+                        newIntent.putExtra("data", newBundle);
+                        getActivity().startActivityForResult(newIntent, MainActivity.REQUEST_CONTACT_MODIFY);
+                        break;
+                    }
+                    case R.id.contacts_item_remove_button:
+                    {
+                        int position = (Integer) v.getTag();
+                        Contact contact = mContactsAdapter.getItem(position);
+                        mContactsAdapter.remove(contact);
+                        break;
+                    }
+                }
+            }
+        };
 
-
+        mContactsAdapter = new ContactsAdapter(getActivity(), R.layout.contacts_list_item, R.id.contacts_item_name_text, contactsList, mOnClickListener);
     }
+
     public void addData(Bundle bundle){
 
-            Contact newContact = new Contact();
-            newContact.mName = bundle.getString("name");
-            newContact.mPhoneNumber = bundle.getString("phoneNumber");
-            mContactsAdapter.add(newContact);
+        Contact newContact = new Contact();
+        newContact.mName = bundle.getString("name");
+        newContact.mPhoneNumber = bundle.getString("phoneNumber");
+        int modifyPosition = bundle.getInt("position");
+        if(modifyPosition != -1){
+            Contact oldContact = mContactsAdapter.getItem(modifyPosition);
+            mContactsAdapter.remove(oldContact);
+        }
+        mContactsAdapter.add(newContact);
 
     }
     @Override

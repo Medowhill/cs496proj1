@@ -15,6 +15,8 @@ import org.json.JSONObject;
 public class AddContactActivity extends Activity {
     private EditText mNameEt;
     private EditText mPhonenumberEt;
+    private int modifyPosition = -1;
+
     protected void onCreate(Bundle savedInstanceState){
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_addcontact);
@@ -27,6 +29,7 @@ public class AddContactActivity extends Activity {
             if(gotBundle != null) {
                 mNameEt.setText(gotBundle.getString("name"));
                 mPhonenumberEt.setText(gotBundle.getString("phoneNumber"));
+                modifyPosition = gotBundle.getInt("position");
             }
         }
 
@@ -44,12 +47,17 @@ public class AddContactActivity extends Activity {
 
                 newBundle.putString("name", mName);
                 newBundle.putString("phoneNumber", mPhoneNumber);
+                newBundle.putInt("position", modifyPosition);
 
 
                 Intent newIntent = new Intent(this, MainActivity.class);
                 newIntent.putExtra("data", newBundle);
 
                 setResult(RESULT_OK, newIntent);
+                finish();
+            }
+            case R.id.addCancelButton:
+            {
                 finish();
             }
         }

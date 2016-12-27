@@ -22,12 +22,16 @@ import java.util.List;
 
 public class ContactsAdapter extends ArrayAdapter<Contact> {
 
-    public ContactsAdapter(Context context, int resources, int textViewResourceId, List<Contact> data){//}, View.OnClickListener onClickListener){
+    private View.OnClickListener mOnClickListener;
+    public ContactsAdapter(Context context, int resources, int textViewResourceId, List<Contact> data, View.OnClickListener onClickListener){
         super(context, resources, textViewResourceId, data);
+        mOnClickListener = onClickListener;
     }
 
     class ViewHolder{
         TextView mNameTv;
+        ImageButton mEditButton;
+        ImageButton mRemoveButton;
     }
 
     @Override
@@ -39,23 +43,19 @@ public class ContactsAdapter extends ArrayAdapter<Contact> {
         if(viewHolder == null){
             viewHolder = new ViewHolder();
             viewHolder.mNameTv = (TextView) itemLayout.findViewById(R.id.contacts_item_name_text);
+            viewHolder.mEditButton = (ImageButton) itemLayout.findViewById(R.id.contacts_item_edit_button);
+            viewHolder.mRemoveButton = (ImageButton) itemLayout.findViewById(R.id.contacts_item_remove_button);
             itemLayout.setTag(viewHolder);
         }
 
 
         viewHolder.mNameTv.setText(getItem(position).mName);
-        ImageButton editButton = (ImageButton) itemLayout.findViewById(R.id.contacts_item_edit_button);
-        editButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent newIntent = new Intent();
-                Bundle newBundle = new Bundle();
-                //newBundle.putString("name", getItem(position).mName);
-                //newBundle.putString("phoneNumber", getItem(position).mPhoneNumber);
-                newIntent.putExtra("data", newBundle);
 
-            }
-        });
+        viewHolder.mEditButton.setOnClickListener(mOnClickListener);
+        viewHolder.mEditButton.setTag(position);
+        viewHolder.mRemoveButton.setOnClickListener(mOnClickListener);
+        viewHolder.mRemoveButton.setTag(position);
+
 
 
         return itemLayout;

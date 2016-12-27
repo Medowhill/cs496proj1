@@ -10,7 +10,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-        <EditText
+            <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft = "20dp"
@@ -18,7 +18,7 @@
             android:layout_marginTop = "40dp"
             android:hint = "Name"
             android:id = "@+id/name_add_edit"/>
-        <EditText
+            <EditText
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_below= "@id/name_add_edit"
@@ -28,18 +28,30 @@
             android:inputType="phone"
             android:hint = "Phone Number"
             android:id = "@+id/phonenumber_add_edit"/>
-
-            <Button
+            <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@+id/phonenumber_add_edit">
+                <Button
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginLeft = "20dp"
                 android:layout_marginStart = "20dp"
                 android:layout_marginTop="10dp"
-                android:layout_below="@+id/phonenumber_add_edit"
+
                 android:text="Add"
                 android:id="@+id/addCommitButton"
                 android:onClick="onClick"/>
-
+                <Button
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft = "20dp"
+                    android:layout_marginStart = "20dp"
+                    android:layout_marginTop="10dp"
+                    android:text="Cancel"
+                    android:id="@+id/addCancelButton"
+                    android:onClick="onClick"/>
+        </LinearLayout>
         </RelativeLayout>
     </ScrollView>
 
