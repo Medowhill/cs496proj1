@@ -1,7 +1,7 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
     android:paddingBottom="@dimen/free_margin"
     android:paddingLeft="@dimen/free_margin"
     android:paddingRight="@dimen/free_margin"
@@ -9,48 +9,96 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
-        <EditText
-            android:id="@+id/free_editText"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="@dimen/free_margin"
-            android:layout_weight="1"
-            android:gravity="top"
-            android:lines="5"
-            android:maxLines="5" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
         <LinearLayout
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:paddingBottom="@dimen/free_button_bottom_padding">
+            android:id="@+id/free_linearLayout_memo"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
 
-            <ImageButton
-                android:id="@+id/free_button_save"
-                android:layout_width="@dimen/free_button_width"
-                android:layout_height="match_parent"
-                android:layout_gravity="center_vertical"
+            <EditText
+                android:id="@+id/free_editText"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/free_margin"
                 android:layout_weight="1"
-                android:background="@drawable/save"
-                android:enabled="false"
-                android:scaleType="fitCenter" />
+                android:gravity="top"
+                android:lines="5"
+                android:maxLines="5" />
 
-            <ImageButton
-                android:id="@+id/free_button_photo"
-                android:layout_width="@dimen/free_button_width"
+            <LinearLayout
+                android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_gravity="center_vertical"
-                android:layout_weight="1"
-                android:background="@drawable/photo_add"
-                android:scaleType="fitCenter" />
+                android:orientation="vertical"
+                android:paddingBottom="@dimen/free_button_bottom_padding">
 
+                <ImageButton
+                    android:id="@+id/free_button_save"
+                    android:layout_width="@dimen/free_button_width"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:background="@drawable/save"
+                    android:enabled="false"
+                    android:scaleType="fitCenter" />
+
+                <ImageButton
+                    android:id="@+id/free_button_photo"
+                    android:layout_width="@dimen/free_button_width"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="center_vertical"
+                    android:layout_weight="1"
+                    android:background="@drawable/photo_add"
+                    android:scaleType="fitCenter" />
+            </LinearLayout>
         </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/free_linearLayout_search"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/free_search_text" />
+
+            <TextView
+                android:id="@+id/free_textView_date"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+            <TextView
+                android:id="@+id/free_textView_include"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+        </LinearLayout>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/free_recyclerView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
     </LinearLayout>
 
-    <android.support.v7.widget.RecyclerView
-        android:id="@+id/free_recyclerView"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
-</LinearLayout>
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/free_fab_search"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|right"
+        android:layout_marginBottom="@dimen/fab_margin"
+        android:layout_marginRight="@dimen/fab_margin"
+        app:srcCompat="@drawable/search" />
+
+    <android.support.design.widget.FloatingActionButton
+        android:id="@+id/free_fab_cancel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="bottom|right"
+        android:layout_marginBottom="@dimen/fab_margin"
+        android:layout_marginRight="@dimen/fab_margin"
+        android:visibility="invisible"
+        app:srcCompat="@drawable/cancel" />
+</FrameLayout>

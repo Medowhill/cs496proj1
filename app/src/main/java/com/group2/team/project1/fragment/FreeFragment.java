@@ -13,6 +13,7 @@ import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -28,8 +29,11 @@ import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.ArrayAdapter;
+import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.group2.team.project1.ActivityResultEvent;
@@ -63,16 +67,21 @@ public class FreeFragment extends Fragment {
     private RecyclerView recyclerView;
     private EditText editText;
     private ImageButton buttonSave, buttonPhoto;
+    private FloatingActionButton fabSearch, fabCancel;
+    private LinearLayout layoutMemo, layoutSearch;
+    private TextView textViewDate, textViewInclude;
     private Animation animation;
 
-    private ArrayList<FreeItem> items;
-    private boolean photo = false;
+    private ArrayList<FreeItem> items, savedItems;
+    private boolean photo = false, searching = false;
     private int position;
     private Bitmap bitmap;
     private String currentPath;
+    private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
     public FreeFragment() {
         items = new ArrayList<>();
+        savedItems = new ArrayList<>();
     }
 
     public static FreeFragment newInstance() {
@@ -118,6 +127,12 @@ public class FreeFragment extends Fragment {
         editText = (EditText) rootView.findViewById(R.id.free_editText);
         buttonSave = (ImageButton) rootView.findViewById(R.id.free_button_save);
         buttonPhoto = (ImageButton) rootView.findViewById(R.id.free_button_photo);
+        fabSearch = (FloatingActionButton) rootView.findViewById(R.id.free_fab_search);
+        fabCancel = (FloatingActionButton) rootView.findViewById(R.id.free_fab_cancel);
+        layoutMemo = (LinearLayout) rootView.findViewById(R.id.free_linearLayout_memo);
+        layoutSearch = (LinearLayout) rootView.findViewById(R.id.free_linearLayout_search);
+        textViewDate = (TextView) rootView.findViewById(R.id.free_textView_date);
+        textViewInclude = (TextView) rootView.findViewById(R.id.free_textView_include);
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -217,6 +232,77 @@ public class FreeFragment extends Fragment {
                     buttonPhoto.setBackgroundResource(R.drawable.photo_add);
                     photo = false;
                 }
+            }
+        });
+
+        fabSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                View view = inflater.inflate(R.layout.dialog_free_search, null);
+                final CalendarView calendarView1 = (CalendarView) view.findViewById(R.id.free_calendarView1), calendarView2 = (CalendarView) view.findViewById(R.id.free_calendarView2);
+                final EditText editText = (EditText) view.findViewById(R.id.free_editText_search);
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setView(view);
+                builder.setPositiveButton(R.string.free_search_positive, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        long day = 24L * 3600 * 1000;
+                        long date1 = calendarView1.getDate() / day * day, date2 = calendarView2.getDate() / day * day + day;
+                        savedItems.addAll(items);
+                        items.clear();
+                        for (FreeItem item : savedItems) {
+                            long date = item.getDate();
+                            if (date1 <= date && date < date2 && item.getContent().contains(editText.getText().toString()))
+                                items.add(item);
+                        }
+                        recyclerView.getAdapter().notifyDataSetChanged();
+                        fabCancel.setVisibility(View.VISIBLE);
+                        layoutMemo.setVisibility(View.GONE);
+                        layoutSearch.setVisibility(View.VISIBLE);
+                        textViewDate.setText("From " + format.format(new Date(date1)) + " to " + format.format(new Date(date2)));
+                        textViewInclude.setText("Including \"" + editText.getText().toString() + "\"");
+                        searching = true;
+                    }
+                });
+                builder.setNegativeButton(R.string.free_search_negative, null);
+                builder.show();
+
+                calendarView1.setDate(calendarView2.getDate() - 30L * 24 * 3600 * 1000);
+                calendarView1.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
+                    @Override
+                    public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
+                        if (calendarView1.getDate() > calendarView2.getDate()) {
+                            Toast.makeText(getContext(), "Invalid date", Toast.LENGTH_LONG).show();
+                            calendarView1.setDate(calendarView2.getDate());
+                        }
+                    }
+                });
+                calendarView2.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
+                    @Override
+                    public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
+                        if (calendarView1.getDate() > calendarView2.getDate()) {
+                            Toast.makeText(getContext(), "Invalid date", Toast.LENGTH_LONG).show();
+                            calendarView2.setDate(calendarView1.getDate());
+                        } else if (calendarView2.getDate() > Calendar.getInstance().getTime().getTime()) {
+                            Toast.makeText(getContext(), "Invalid date", Toast.LENGTH_LONG).show();
+                            calendarView2.setDate(Calendar.getInstance().getTime().getTime());
+                        }
+                    }
+                });
+            }
+        });
+
+        fabCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                fabCancel.setVisibility(View.INVISIBLE);
+                layoutSearch.setVisibility(View.GONE);
+                layoutMemo.setVisibility(View.VISIBLE);
+                items.clear();
+                items.addAll(savedItems);
+                savedItems.clear();
+                recyclerView.getAdapter().notifyDataSetChanged();
+                searching = false;
             }
         });
         return rootView;
@@ -365,6 +451,10 @@ public class FreeFragment extends Fragment {
             public void onClick(DialogInterface dialog, int which) {
                 switch (which) {
                     case 0:
+                        if (searching) {
+                            Toast.makeText(getContext(), "You cannot edit the memo in the search mode.", Toast.LENGTH_LONG).show();
+                            return;
+                        }
                         FreeItem item = items.remove(position);
                         recyclerView.getAdapter().notifyDataSetChanged();
 
@@ -389,7 +479,9 @@ public class FreeFragment extends Fragment {
                         }
                         break;
                     case 1:
-                        items.remove(position);
+                        FreeItem itm = items.remove(position);
+                        if (searching)
+                            savedItems.remove(itm);
                         recyclerView.getAdapter().notifyDataSetChanged();
                         break;
                     case 2:
