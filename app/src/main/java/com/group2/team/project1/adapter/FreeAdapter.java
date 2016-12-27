@@ -10,10 +10,12 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.group2.team.project1.FreeItem;
+import com.group2.team.project1.MainActivity;
 import com.group2.team.project1.R;
 
 import java.io.FileInputStream;
@@ -25,6 +27,7 @@ import java.util.HashMap;
 
 public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
 
+    private MainActivity activity;
     private Context context;
     private ArrayList<FreeItem> items;
     private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -40,8 +43,9 @@ public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
         }
     };
 
-    public FreeAdapter(Context context, ArrayList<FreeItem> items) {
-        this.context = context;
+    public FreeAdapter(MainActivity activity, ArrayList<FreeItem> items) {
+        this.activity = activity;
+        this.context = activity.getApplicationContext();
         this.items = items;
         tmpBitmaps = new HashMap<>();
         tmpImageViews = new HashMap<>();
@@ -54,10 +58,16 @@ public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(ViewHolder holder, final int position) {
         final FreeItem item = items.get(position);
         holder.textViewDate.setText(format.format(new Date(item.getDate())));
         holder.textViewContent.setText(item.getContent());
+        holder.imageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                activity.handleDropdownClick(position);
+            }
+        });
 
         if (item.isPhoto()) {
             tmpImageViews.put(item.getDate(), holder.imageView);
@@ -96,12 +106,14 @@ public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
 
         ImageView imageView;
         TextView textViewDate, textViewContent;
+        ImageButton imageButton;
 
         ViewHolder(View view) {
             super(view);
             imageView = (ImageView) view.findViewById(R.id.free_item_imageView);
             textViewDate = (TextView) view.findViewById(R.id.free_item_textView_date);
             textViewContent = (TextView) view.findViewById(R.id.free_item_textView_content);
+            imageButton = (ImageButton) view.findViewById(R.id.free_item_imageButton);
         }
     }
 }
