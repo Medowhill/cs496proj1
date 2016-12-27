@@ -1,6 +1,8 @@
 package com.group2.team.project1;
 
+
 import android.content.Context;
+
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -12,7 +14,9 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+
 import android.support.v4.app.FragmentStatePagerAdapter;
+
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
@@ -23,6 +27,7 @@ import android.support.v7.widget.Toolbar;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
 import android.text.Editable;
@@ -44,6 +49,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.group2.team.project1.adapter.FreeAdapter;
+
+import com.group2.team.project1.adapter.ContactsAdapter;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -80,12 +87,16 @@ public class MainActivity extends AppCompatActivity {
 
     final public static int REQUEST_CAMERA_FROM_FREE = 1;
 
+    final public static int REQUEST_CONTACT_ADD = 3;
+
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
     private ViewPager mViewPager;
 
     private String currentPath;
     private Bitmap bitmap;
+
+    Intent intent = null;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,7 +115,11 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
+
+
     }
+
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
@@ -117,6 +132,15 @@ public class MainActivity extends AppCompatActivity {
                     ((FreeFragment) fragment).setButtonPhoto();
                 else
                     Toast.makeText(getApplicationContext(), "Fail to load the photo! Please go to A tab and come back to C tab.", Toast.LENGTH_LONG).show();
+            }
+        } else if (requestCode == REQUEST_CONTACT_ADD){
+            if(resultCode == RESULT_OK){
+                Toast.makeText(getApplicationContext(), "add tried", Toast.LENGTH_LONG).show();
+                Fragment fragment = mSectionsPagerAdapter.fragments[0];
+
+                if(fragment != null){
+                    ((PhoneNumberFragment)fragment).addData(data.getBundleExtra("data"));
+                }
             }
         }
     }
@@ -147,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
 
         bitmap = BitmapFactory.decodeFile(currentPath, bmOptions);
     }
+
 
     public Bitmap getBitmap() {
         return bitmap;

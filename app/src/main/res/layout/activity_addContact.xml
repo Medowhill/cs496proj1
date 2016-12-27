@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft = "20dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginTop = "40dp"
+            android:hint = "Name"
+            android:id = "@+id/name_add_edit"/>
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below= "@id/name_add_edit"
+            android:layout_marginLeft = "20dp"
+            android:layout_marginRight="20dp"
+            android:layout_marginTop = "10dp"
+            android:inputType="phone"
+            android:hint = "Phone Number"
+            android:id = "@+id/phonenumber_add_edit"/>
+
+            <Button
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft = "20dp"
+                android:layout_marginStart = "20dp"
+                android:layout_marginTop="10dp"
+                android:layout_below="@+id/phonenumber_add_edit"
+                android:text="Add"
+                android:id="@+id/addCommitButton"
+                android:onClick="onClick"/>
+
+        </RelativeLayout>
+    </ScrollView>
+
+</LinearLayout>
