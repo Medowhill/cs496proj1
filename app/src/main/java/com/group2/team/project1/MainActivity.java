@@ -1,84 +1,35 @@
 package com.group2.team.project1;
 
-import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
-import android.os.Environment;
-import android.provider.MediaStore;
-import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.FragmentStatePagerAdapter;
-import android.support.v4.content.FileProvider;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.os.Bundle;
-import android.text.Editable;
-import android.text.TextWatcher;
 import android.util.Log;
 import android.view.Display;
-import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuItem;
-import android.view.View;
-import android.view.ViewGroup;
 
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.AdapterView;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import com.group2.team.project1.adapter.FreeAdapter;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOError;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Date;
+import java.io.InputStream;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import android.widget.AbsListView;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.BaseAdapter;
-import android.widget.Gallery;
-import android.widget.ImageView;
-
-import com.group2.team.project1.R;
-import com.group2.team.project1.adapter.GalleryAdapter;
 import com.group2.team.project1.fragment.FreeFragment;
 import com.group2.team.project1.fragment.GalleryFragment;
 import com.group2.team.project1.fragment.PhoneNumberFragment;
 
 public class MainActivity extends AppCompatActivity {
 
-    final public static int REQUEST_CAMERA_FROM_FREE = 1;
+    final public static int REQUEST_CAMERA_FROM_FREE = 1, REQUEST_GALLERY_FROM_FREE = 2;
+    final private static int PHOTO_WIDTH_MAX = 1440, PHOTO_HEIGHT_MAX = 1440;
 
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
@@ -108,44 +59,48 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        if (requestCode == REQUEST_CAMERA_FROM_FREE) {
-            if (resultCode == RESULT_OK) {
-                setPic();
-                Fragment fragment = mSectionsPagerAdapter.fragments[2];
-                Log.i("cs496test", fragment + "");
-                if (fragment != null)
-                    ((FreeFragment) fragment).setButtonPhoto();
-                else
-                    Toast.makeText(getApplicationContext(), "Fail to load the photo! Please go to A tab and come back to C tab.", Toast.LENGTH_LONG).show();
-            }
+        switch (requestCode) {
+            case REQUEST_CAMERA_FROM_FREE:
+                if (resultCode == RESULT_OK) {
+                    setPhoto(BitmapFactory.decodeFile(currentPath));
+
+                    Fragment fragment = mSectionsPagerAdapter.fragments[2];
+                    if (fragment != null)
+                        ((FreeFragment) fragment).setButtonPhoto();
+                    else
+                        Toast.makeText(getApplicationContext(), "Fail to load the photo! Please go to A tab and come back to C tab.", Toast.LENGTH_LONG).show();
+                }
+                break;
+            case REQUEST_GALLERY_FROM_FREE:
+                if (resultCode == RESULT_OK) {
+                    try {
+                        Uri imageUri = data.getData();
+                        InputStream imageStream = getContentResolver().openInputStream(imageUri);
+                        setPhoto(BitmapFactory.decodeStream(imageStream));
+
+                        Fragment fragment = mSectionsPagerAdapter.fragments[2];
+                        if (fragment != null)
+                            ((FreeFragment) fragment).setButtonPhoto();
+                        else
+                            Toast.makeText(getApplicationContext(), "Fail to load the photo! Please go to A tab and come back to C tab.", Toast.LENGTH_LONG).show();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
         }
     }
 
-    private void setPic() {
-        Display display = getWindowManager().getDefaultDisplay();
-        Point size = new Point();
-        display.getSize(size);
+    private void setPhoto(Bitmap tmp){
+        int width = tmp.getWidth();
+        int height = tmp.getHeight();
 
-        // Get the dimensions of the View
-        int targetW = size.x / 2;
-        int targetH = size.y / 3;
-
-        // Get the dimensions of the bitmap
-        BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-        bmOptions.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(currentPath, bmOptions);
-        int photoW = bmOptions.outWidth;
-        int photoH = bmOptions.outHeight;
-
-        // Determine how much to scale down the image
-        int scaleFactor = Math.min(photoW / targetW, photoH / targetH);
-
-        // Decode the image file into a Bitmap sized to fill the View
-        bmOptions.inJustDecodeBounds = false;
-        bmOptions.inSampleSize = scaleFactor;
-        bmOptions.inPurgeable = true;
-
-        bitmap = BitmapFactory.decodeFile(currentPath, bmOptions);
+        if (width > PHOTO_WIDTH_MAX || height > PHOTO_HEIGHT_MAX) {
+            float scaleFactor = Math.min(1.f * PHOTO_WIDTH_MAX / width, 1.f * PHOTO_HEIGHT_MAX / height);
+            bitmap = Bitmap.createScaledBitmap(tmp, (int) (width * scaleFactor), (int) (height * scaleFactor), false);
+            tmp.recycle();
+        } else
+            bitmap = tmp;
     }
 
     public Bitmap getBitmap() {
