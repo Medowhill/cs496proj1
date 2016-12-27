@@ -27,20 +27,24 @@
             android:orientation="vertical"
             android:paddingBottom="@dimen/free_button_bottom_padding">
 
-            <Button
+            <ImageButton
                 android:id="@+id/free_button_save"
                 android:layout_width="@dimen/free_button_width"
                 android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
                 android:layout_weight="1"
+                android:background="@drawable/save"
                 android:enabled="false"
-                android:text="@string/free_save" />
+                android:scaleType="fitCenter" />
 
-            <Button
+            <ImageButton
                 android:id="@+id/free_button_photo"
                 android:layout_width="@dimen/free_button_width"
                 android:layout_height="match_parent"
+                android:layout_gravity="center_vertical"
                 android:layout_weight="1"
-                android:text="@string/free_add_photo" />
+                android:background="@drawable/photo_add"
+                android:scaleType="fitCenter" />
 
         </LinearLayout>
     </LinearLayout>

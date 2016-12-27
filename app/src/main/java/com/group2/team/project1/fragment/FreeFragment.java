@@ -3,6 +3,7 @@ package com.group2.team.project1.fragment;
 import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.media.Image;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -10,6 +11,7 @@ import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.FileProvider;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
@@ -21,6 +23,7 @@ import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 
 import com.group2.team.project1.FreeItem;
 import com.group2.team.project1.MainActivity;
@@ -45,10 +48,10 @@ public class FreeFragment extends Fragment {
 
     final private String FILE_NAME = "FreeFragmentDataSave";
     private ArrayList<FreeItem> items;
-
+    private boolean photo = false;
     private RecyclerView recyclerView;
     private EditText editText;
-    private Button buttonSave, buttonPhoto;
+    private ImageButton buttonSave, buttonPhoto;
     private Animation animation;
 
     public FreeFragment() {
@@ -96,8 +99,8 @@ public class FreeFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_free, container, false);
         recyclerView = (RecyclerView) rootView.findViewById(R.id.free_recyclerView);
         editText = (EditText) rootView.findViewById(R.id.free_editText);
-        buttonSave = (Button) rootView.findViewById(R.id.free_button_save);
-        buttonPhoto = (Button) rootView.findViewById(R.id.free_button_photo);
+        buttonSave = (ImageButton) rootView.findViewById(R.id.free_button_save);
+        buttonPhoto = (ImageButton) rootView.findViewById(R.id.free_button_photo);
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -128,10 +131,11 @@ public class FreeFragment extends Fragment {
             }
         });
 
+        if (editText.getText().toString().length() == 0)
+            buttonSave.setEnabled(false);
         buttonSave.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                boolean photo = buttonPhoto.getText().toString().equals(getString(R.string.free_remove_photo));
                 long time = Calendar.getInstance().getTime().getTime();
                 FreeItem item = new FreeItem(time, editText.getText().toString(), photo);
                 if (photo) {
@@ -144,7 +148,8 @@ public class FreeFragment extends Fragment {
                         e.printStackTrace();
                     }
                     bitmap.recycle();
-                    buttonPhoto.setText(R.string.free_add_photo);
+                    buttonPhoto.setBackgroundResource(R.drawable.photo_add);
+                    photo = false;
                 }
                 editText.setText("");
                 items.add(0, item);
@@ -156,23 +161,44 @@ public class FreeFragment extends Fragment {
         buttonPhoto.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (buttonPhoto.getText().toString().equals(getString(R.string.free_add_photo))) {
-                    Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-                    File file = null;
-                    try {
-                        file = createImageFile();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    // Continue only if the File was successfully created
-                    if (file != null) {
-                        Uri photoURI = FileProvider.getUriForFile(getActivity(), "com.group2.team.project1", file);
-                        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
-                        if (intent.resolveActivity(getActivity().getPackageManager()) != null)
-                            getActivity().startActivityForResult(intent, MainActivity.REQUEST_CAMERA_FROM_FREE);
-                    }
+                if (!photo) {
+                    View view = inflater.inflate(R.layout.dialog_free_photo, null);
+                    final AlertDialog dialog = new AlertDialog.Builder(getActivity(), R.style.CustomDialog).create();
+                    dialog.setView(view);
+                    dialog.show();
+
+                    ImageButton buttonCamera = (ImageButton) view.findViewById(R.id.free_imageButton_camera), buttonGallery = (ImageButton) view.findViewById(R.id.free_imageButton_gallery);
+                    buttonCamera.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                            File file = null;
+                            try {
+                                file = createImageFile();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            dialog.dismiss();
+                            if (file != null) {
+                                Uri photoURI = FileProvider.getUriForFile(getActivity(), "com.group2.team.project1", file);
+                                intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                                if (intent.resolveActivity(getActivity().getPackageManager()) != null)
+                                    getActivity().startActivityForResult(intent, MainActivity.REQUEST_CAMERA_FROM_FREE);
+                            }
+                        }
+                    });
+                    buttonGallery.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Intent intent = new Intent(Intent.ACTION_PICK);
+                            intent.setType("image/*");
+                            dialog.dismiss();
+                            getActivity().startActivityForResult(intent, MainActivity.REQUEST_GALLERY_FROM_FREE);
+                        }
+                    });
                 } else {
-                    buttonPhoto.setText(R.string.free_add_photo);
+                    buttonPhoto.setBackgroundResource(R.drawable.photo_add);
+                    photo = false;
                 }
             }
         });
@@ -236,6 +262,7 @@ public class FreeFragment extends Fragment {
 
     public void setButtonPhoto() {
         if (buttonPhoto != null)
-            buttonPhoto.setText(R.string.free_remove_photo);
+            buttonPhoto.setBackgroundResource(R.drawable.photo_remove);
+        photo = true;
     }
 }
