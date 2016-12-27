@@ -1,6 +1,5 @@
 package com.group2.team.project1;
 
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
@@ -8,11 +7,9 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.view.ViewPager;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import com.group2.team.project1.fragment.FreeFragment;
@@ -50,10 +47,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case FreeFragment.REQUEST_CAMERA_FROM_FREE:
+            case FreeFragment.REQUEST_CAMERA:
                 EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
                 break;
-            case FreeFragment.REQUEST_GALLERY_FROM_FREE:
+            case FreeFragment.REQUEST_GALLERY:
                 EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
                 break;
             case REQUEST_CONTACT_ADD:

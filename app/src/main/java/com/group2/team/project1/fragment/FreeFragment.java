@@ -7,6 +7,9 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -23,6 +26,7 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -36,6 +40,9 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 import com.group2.team.project1.ActivityResultEvent;
 import com.group2.team.project1.EventBus;
 import com.group2.team.project1.FreeItem;
@@ -56,11 +63,13 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 // Fragment class for C tab (Free)
-public class FreeFragment extends Fragment {
+public class FreeFragment extends Fragment implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
-    final public static int REQUEST_CAMERA_FROM_FREE = 1, REQUEST_GALLERY_FROM_FREE = 2, PERMISSION_REQUEST_FROM_FREE = 3;
+    final public static int REQUEST_CAMERA = 1, REQUEST_GALLERY = 2, PERMISSION_REQUEST_STORAGE = 3, PERMISSION_REQUEST_LOCATION = 4;
     final private static int PHOTO_WIDTH_MAX = 1440, PHOTO_HEIGHT_MAX = 1440;
     final private static String FILE_NAME = "FreeFragmentDataSave";
 
@@ -72,6 +81,7 @@ public class FreeFragment extends Fragment {
     private TextView textViewDate, textViewInclude;
     private Animation animation;
 
+    private GoogleApiClient googleApiClient;
     private ArrayList<FreeItem> items, savedItems;
     private boolean photo = false, searching = false;
     private int position;
@@ -115,6 +125,26 @@ public class FreeFragment extends Fragment {
                 }
             }
         }
+
+        if (googleApiClient == null)
+            googleApiClient = new GoogleApiClient.Builder(getContext()).addConnectionCallbacks(this).addOnConnectionFailedListener(this).addApi(LocationServices.API).build();
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.i("cs496", "connected");
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_LOCATION);
+        } else
+            getLocationAfterGetPermission();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
     }
 
     @Override
@@ -214,7 +244,7 @@ public class FreeFragment extends Fragment {
                                 Uri photoURI = FileProvider.getUriForFile(getActivity(), "com.group2.team.project1", file);
                                 intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                                 if (intent.resolveActivity(getActivity().getPackageManager()) != null)
-                                    ActivityCompat.startActivityForResult(getActivity(), intent, REQUEST_CAMERA_FROM_FREE, null);
+                                    ActivityCompat.startActivityForResult(getActivity(), intent, REQUEST_CAMERA, null);
                             }
                         }
                     });
@@ -224,7 +254,7 @@ public class FreeFragment extends Fragment {
                             Intent intent = new Intent(Intent.ACTION_PICK);
                             intent.setType("image/*");
                             dialog.dismiss();
-                            ActivityCompat.startActivityForResult(getActivity(), intent, REQUEST_GALLERY_FROM_FREE, null);
+                            ActivityCompat.startActivityForResult(getActivity(), intent, REQUEST_GALLERY, null);
                         }
                     });
                 } else {
@@ -312,12 +342,14 @@ public class FreeFragment extends Fragment {
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         EventBus.getInstance().register(this);
+        googleApiClient.connect();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         EventBus.getInstance().unregister(this);
+        googleApiClient.disconnect();
     }
 
     @Override
@@ -341,10 +373,15 @@ public class FreeFragment extends Fragment {
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if (requestCode == PERMISSION_REQUEST_FROM_FREE) {
-            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                sharePhotoAfterGetPermission(position);
-            }
+        switch (requestCode) {
+            case PERMISSION_REQUEST_STORAGE:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    sharePhotoAfterGetPermission(position);
+                break;
+            case PERMISSION_REQUEST_LOCATION:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    getLocationAfterGetPermission();
+                break;
         }
     }
 
@@ -357,7 +394,7 @@ public class FreeFragment extends Fragment {
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case FreeFragment.REQUEST_CAMERA_FROM_FREE:
+            case FreeFragment.REQUEST_CAMERA:
                 if (resultCode == Activity.RESULT_OK) {
                     Bitmap tmp = BitmapFactory.decodeFile(currentPath);
                     if (tmp == null) {
@@ -368,7 +405,7 @@ public class FreeFragment extends Fragment {
                     setButtonPhoto();
                 }
                 break;
-            case FreeFragment.REQUEST_GALLERY_FROM_FREE:
+            case FreeFragment.REQUEST_GALLERY:
                 if (resultCode == Activity.RESULT_OK) {
                     try {
                         Uri imageUri = data.getData();
@@ -493,7 +530,7 @@ public class FreeFragment extends Fragment {
                     case 3:
                         if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
                             FreeFragment.this.position = position;
-                            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_FROM_FREE);
+                            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_STORAGE);
                         } else
                             sharePhotoAfterGetPermission(position);
                         break;
@@ -501,6 +538,16 @@ public class FreeFragment extends Fragment {
             }
         });
         builder.show();
+    }
+
+    public void getLocationAfterGetPermission() {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            Location location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+            if (location != null) {
+                String address = getAddress(location.getLatitude(), location.getLongitude());
+                Log.i("cs496", address);
+            }
+        }
     }
 
     public void sharePhotoAfterGetPermission(int position) {
@@ -531,5 +578,25 @@ public class FreeFragment extends Fragment {
 
         intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(f));
         getActivity().startActivity(Intent.createChooser(intent, getString(R.string.free_share_photo)));
+    }
+
+    private String getAddress(double latitude, double longitude) {
+        String nowAddress = "Cannot load the address";
+        Geocoder geocoder = new Geocoder(getContext(), Locale.KOREA);
+        List<Address> address;
+        try {
+            if (geocoder != null) {
+                address = geocoder.getFromLocation(latitude, longitude, 1);
+                if (address != null && address.size() > 0) {
+                    String currentLocationAddress = address.get(0).getAddressLine(0).toString();
+                    nowAddress = currentLocationAddress;
+                }
+            }
+
+        } catch (IOException e) {
+            Toast.makeText(getContext(), "Cannot load the address.", Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
+        return nowAddress;
     }
 }
