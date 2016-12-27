@@ -1,10 +1,8 @@
 <resources>
     <string name="app_name">Project1</string>
 
-    <string name="cancel">cancel</string>
-    <string name="ok">ok</string>
-
-    <string name="free_save">save</string>
-    <string name="free_add_photo">add\nphoto</string>
-    <string name="free_remove_photo">remove\nphoto</string>
+    <string name="free_edit">Edit</string>
+    <string name="free_delete">Delete</string>
+    <string name="free_share_text">Share Text</string>
+    <string name="free_share_photo">Share Photo</string>
 </resources>

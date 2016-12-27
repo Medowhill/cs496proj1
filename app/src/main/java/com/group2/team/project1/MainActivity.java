@@ -1,12 +1,17 @@
 package com.group2.team.project1;
 
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Point;
 import android.net.Uri;
+import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 
@@ -17,6 +22,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.Display;
 
+import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import java.io.IOException;
@@ -28,7 +34,7 @@ import com.group2.team.project1.fragment.PhoneNumberFragment;
 
 public class MainActivity extends AppCompatActivity {
 
-    final public static int REQUEST_CAMERA_FROM_FREE = 1, REQUEST_GALLERY_FROM_FREE = 2;
+    final public static int REQUEST_CAMERA_FROM_FREE = 1, REQUEST_GALLERY_FROM_FREE = 2, PERMISSION_REQUEST_FROM_FREE = 3;
     final private static int PHOTO_WIDTH_MAX = 1440, PHOTO_HEIGHT_MAX = 1440;
 
     final public static int REQUEST_CONTACT_ADD = 3;
@@ -39,6 +45,7 @@ public class MainActivity extends AppCompatActivity {
 
     private String currentPath;
     private Bitmap bitmap;
+    private int position;
 
     Intent intent = null;
 
@@ -104,7 +111,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void setPhoto(Bitmap tmp){
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == PERMISSION_REQUEST_FROM_FREE) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Fragment fragment = mSectionsPagerAdapter.fragments[2];
+                if (fragment != null) {
+                    ((FreeFragment) fragment).sharePhotoAfterGetPermission(position);
+                }
+            }
+        }
+    }
+
+    private void setPhoto(Bitmap tmp) {
         int width = tmp.getWidth();
         int height = tmp.getHeight();
 
@@ -116,8 +135,53 @@ public class MainActivity extends AppCompatActivity {
             bitmap = tmp;
     }
 
+    public void handleDropdownClick(final int position) {
+        final ArrayAdapter<String> adapter = new ArrayAdapter<>(getApplicationContext(), android.R.layout.simple_list_item_1);
+        final Fragment fragment = mSectionsPagerAdapter.fragments[2];
+        adapter.add(getString(R.string.free_edit));
+        adapter.add(getString(R.string.free_delete));
+        adapter.add(getString(R.string.free_share_text));
+        if (fragment != null && ((FreeFragment) fragment).hasPhoto(position))
+            adapter.add(getString(R.string.free_share_photo));
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this, R.style.ListDialog);
+        builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if (fragment != null) {
+                    FreeFragment freeFragment = ((FreeFragment) fragment);
+                    switch (which) {
+                        case 0:
+                            freeFragment.editItem(position);
+                            break;
+                        case 1:
+                            freeFragment.deleteItem(position);
+                            break;
+                        case 2:
+                            freeFragment.shareText(position);
+                            break;
+                        case 3:
+                            MainActivity.this.position = position;
+                            freeFragment.sharePhoto(position);
+                            break;
+                    }
+                }
+            }
+        });
+        builder.show();
+    }
+
     public Bitmap getBitmap() {
         return bitmap;
+    }
+
+    public void setBitmap(Bitmap bitmap) {
+        this.bitmap = bitmap;
+    }
+
+    public void recycleBitmap() {
+        if (bitmap != null && !bitmap.isRecycled())
+            bitmap.recycle();
     }
 
     public void setCurrentPath(String currentPath) {

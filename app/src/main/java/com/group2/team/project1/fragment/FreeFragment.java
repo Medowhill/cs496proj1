@@ -1,27 +1,32 @@
 package com.group2.team.project1.fragment;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
-import android.media.Image;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
@@ -104,7 +109,7 @@ public class FreeFragment extends Fragment {
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(new FreeAdapter(getContext(), items));
+        recyclerView.setAdapter(new FreeAdapter((MainActivity) getActivity(), items));
 
         editText.addTextChangedListener(new TextWatcher() {
             String previousString = "";
@@ -147,7 +152,7 @@ public class FreeFragment extends Fragment {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    bitmap.recycle();
+                    ((MainActivity) getActivity()).recycleBitmap();
                     buttonPhoto.setBackgroundResource(R.drawable.photo_add);
                     photo = false;
                 }
@@ -163,7 +168,7 @@ public class FreeFragment extends Fragment {
             public void onClick(View v) {
                 if (!photo) {
                     View view = inflater.inflate(R.layout.dialog_free_photo, null);
-                    final AlertDialog dialog = new AlertDialog.Builder(getActivity(), R.style.CustomDialog).create();
+                    final AlertDialog dialog = new AlertDialog.Builder(getActivity(), R.style.TransparentDialog).create();
                     dialog.setView(view);
                     dialog.show();
 
@@ -197,6 +202,7 @@ public class FreeFragment extends Fragment {
                         }
                     });
                 } else {
+                    ((MainActivity) getActivity()).recycleBitmap();
                     buttonPhoto.setBackgroundResource(R.drawable.photo_add);
                     photo = false;
                 }
@@ -264,5 +270,82 @@ public class FreeFragment extends Fragment {
         if (buttonPhoto != null)
             buttonPhoto.setBackgroundResource(R.drawable.photo_remove);
         photo = true;
+    }
+
+    public void deleteItem(int position) {
+        items.remove(position);
+        recyclerView.getAdapter().notifyDataSetChanged();
+    }
+
+    public void editItem(int position) {
+        FreeItem item = items.remove(position);
+        recyclerView.getAdapter().notifyDataSetChanged();
+
+        editText.setText(item.getContent());
+        if (item.isPhoto()) {
+            ((MainActivity) getActivity()).recycleBitmap();
+            try {
+                FileInputStream fis = getContext().openFileInput(item.getDate() + "");
+                byte[] arr = new byte[fis.available()];
+                fis.read(arr);
+                ((MainActivity) getActivity()).setBitmap(BitmapFactory.decodeByteArray(arr, 0, arr.length));
+                fis.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            buttonPhoto.setBackgroundResource(R.drawable.photo_remove);
+            photo = true;
+        } else {
+            buttonPhoto.setBackgroundResource(R.drawable.photo_add);
+            photo = false;
+        }
+    }
+
+    public boolean hasPhoto(int position) {
+        return items.get(position).isPhoto();
+    }
+
+    public void shareText(int position) {
+        Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+        intent.setType("text/plain");
+        intent.putExtra(android.content.Intent.EXTRA_TEXT, items.get(position).getContent());
+        getActivity().startActivity(Intent.createChooser(intent, getString(R.string.free_share_text)));
+    }
+
+    public void sharePhoto(int position) {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MainActivity.PERMISSION_REQUEST_FROM_FREE);
+        else
+            sharePhotoAfterGetPermission(position);
+    }
+
+    public void sharePhotoAfterGetPermission(int position) {
+        Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+        intent.setType("image/jpeg");
+
+        byte[] arr = null;
+        try {
+            FileInputStream fis = getContext().openFileInput(items.get(position).getDate() + "");
+            arr = new byte[fis.available()];
+            fis.read(arr);
+            fis.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        if (arr == null)
+            return;
+
+        File f = new File(Environment.getExternalStorageDirectory() + File.separator + "tmp" + Calendar.getInstance().getTime().getTime());
+        try {
+            f.createNewFile();
+            FileOutputStream fos = new FileOutputStream(f);
+            fos.write(arr);
+            fos.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(f));
+        getActivity().startActivity(Intent.createChooser(intent, getString(R.string.free_share_photo)));
     }
 }
