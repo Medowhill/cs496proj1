@@ -15,8 +15,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.group2.team.project1.FreeItem;
-import com.group2.team.project1.MainActivity;
 import com.group2.team.project1.R;
+import com.group2.team.project1.fragment.FreeFragment;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -27,8 +27,8 @@ import java.util.HashMap;
 
 public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
 
-    private MainActivity activity;
     private Context context;
+    private FreeFragment fragment;
     private ArrayList<FreeItem> items;
     private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
@@ -43,9 +43,9 @@ public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
         }
     };
 
-    public FreeAdapter(MainActivity activity, ArrayList<FreeItem> items) {
-        this.activity = activity;
-        this.context = activity.getApplicationContext();
+    public FreeAdapter(Context context, FreeFragment fragment, ArrayList<FreeItem> items) {
+        this.context = context;
+        this.fragment = fragment;
         this.items = items;
         tmpBitmaps = new HashMap<>();
         tmpImageViews = new HashMap<>();
@@ -65,7 +65,7 @@ public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
         holder.imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                activity.handleDropdownClick(position);
+                fragment.handleDropdownClick(position);
             }
         });
 

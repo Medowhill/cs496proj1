@@ -6,8 +6,6 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.EditText;
 
-import org.json.JSONObject;
-
 /**
  * Created by q on 2016-12-27.
  */
@@ -17,16 +15,16 @@ public class AddContactActivity extends Activity {
     private EditText mPhonenumberEt;
     private int modifyPosition = -1;
 
-    protected void onCreate(Bundle savedInstanceState){
+    protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_addcontact);
 
-        mNameEt =  (EditText) findViewById(R.id.name_add_edit);
+        mNameEt = (EditText) findViewById(R.id.name_add_edit);
         mPhonenumberEt = (EditText) findViewById(R.id.phonenumber_add_edit);
         Intent gotIntent = getIntent();
-        if(gotIntent != null) {
+        if (gotIntent != null) {
             Bundle gotBundle = gotIntent.getBundleExtra("data");
-            if(gotBundle != null) {
+            if (gotBundle != null) {
                 mNameEt.setText(gotBundle.getString("name"));
                 mPhonenumberEt.setText(gotBundle.getString("phoneNumber"));
                 modifyPosition = gotBundle.getInt("position");
@@ -35,10 +33,9 @@ public class AddContactActivity extends Activity {
 
     }
 
-    public void onClick(View v){
-        switch(v.getId()){
-            case R.id.addCommitButton:
-            {
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.addCommitButton: {
                 //Contact newContact = new Contact();
                 String mName = mNameEt.getText().toString();
                 String mPhoneNumber = mPhonenumberEt.getText().toString();
@@ -56,8 +53,7 @@ public class AddContactActivity extends Activity {
                 setResult(RESULT_OK, newIntent);
                 finish();
             }
-            case R.id.addCancelButton:
-            {
+            case R.id.addCancelButton: {
                 finish();
             }
         }
