@@ -26,7 +26,7 @@ public class GalleryFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
 
         final GalleryAdapter adapter = new GalleryAdapter(getContext());
-        for (int i = 1; i < 10; i++) {
+        for (int i = 1; i < 21; i++) {
             adapter.add(getResources().getIdentifier("t" + i, "drawable", getActivity().getPackageName()));
         }
 
