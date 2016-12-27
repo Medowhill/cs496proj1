@@ -53,8 +53,10 @@ public class ContactsAdapter extends ArrayAdapter<Contact> {
 
         viewHolder.mEditButton.setOnClickListener(mOnClickListener);
         viewHolder.mEditButton.setTag(position);
+        viewHolder.mEditButton.setFocusable(false);
         viewHolder.mRemoveButton.setOnClickListener(mOnClickListener);
         viewHolder.mRemoveButton.setTag(position);
+        viewHolder.mRemoveButton.setFocusable(false);
 
 
 

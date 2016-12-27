@@ -7,5 +7,6 @@ package com.group2.team.project1;
 public class Contact {
     public String mName = "";
     public String mPhoneNumber = "";
+    public String mPhotoURI = "";
 
 }
