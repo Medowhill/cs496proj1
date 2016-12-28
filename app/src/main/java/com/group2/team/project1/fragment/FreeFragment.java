@@ -5,12 +5,14 @@ import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.content.pm.ResolveInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
@@ -261,6 +263,13 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
                             if (file != null) {
                                 Uri photoURI = FileProvider.getUriForFile(getActivity(), "com.group2.team.project1", file);
                                 intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
+                                if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.KITKAT) {
+                                    List<ResolveInfo> resInfoList = getContext().getPackageManager().queryIntentActivities(intent, PackageManager.MATCH_DEFAULT_ONLY);
+                                    for (ResolveInfo resolveInfo : resInfoList) {
+                                        String packageName = resolveInfo.activityInfo.packageName;
+                                        getContext().grantUriPermission(packageName, photoURI, Intent.FLAG_GRANT_WRITE_URI_PERMISSION | Intent.FLAG_GRANT_READ_URI_PERMISSION);
+                                    }
+                                }
                                 if (intent.resolveActivity(getActivity().getPackageManager()) != null)
                                     ActivityCompat.startActivityForResult(getActivity(), intent, REQUEST_CAMERA, null);
                             }
@@ -553,7 +562,7 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
         if (items.get(position).isPhoto())
             adapter.add(getString(R.string.free_share_photo));
 
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.ListDialog);
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
         builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
@@ -565,7 +574,7 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
                         }
 
                         if (editText.getText().toString().length() > 0 || photo) {
-                            AlertDialog.Builder builder1 = new AlertDialog.Builder(getActivity(), R.style.ListDialog);
+                            AlertDialog.Builder builder1 = new AlertDialog.Builder(getActivity());
                             builder1.setMessage(R.string.free_edit_alert);
                             builder1.setNegativeButton(R.string.free_edit_negative, null);
                             builder1.setPositiveButton(R.string.free_edit_positive, new DialogInterface.OnClickListener() {

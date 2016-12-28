@@ -2,10 +2,8 @@ package com.group2.team.project1;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -73,7 +71,7 @@ public class AddContactActivity extends Activity {
         }
 
         mProfile = (ImageView) findViewById(R.id.pic_add);
-        if (mPhotoURI == null){//(mCurrentPhotoPath == null) {
+        if (mPhotoURI == null) {//(mCurrentPhotoPath == null) {
             mProfile.setImageResource(R.drawable.ic_face_black_48dp);
         } else {
             setPic();
@@ -148,7 +146,6 @@ public class AddContactActivity extends Activity {
             }*/
 
 
-
         } catch (Exception e) {
             mProfile.setImageResource(R.drawable.ic_face_black_48dp);
             e.printStackTrace();
@@ -167,7 +164,7 @@ public class AddContactActivity extends Activity {
                 newBundle.putString("name", mName);
                 newBundle.putString("phoneNumber", mPhoneNumber);
                 //Log.i("cs496: add", mPhotoURI.toString());
-                if (mPhotoURI != null){ //(mCurrentPhotoPath != null) {
+                if (mPhotoURI != null) { //(mCurrentPhotoPath != null) {
                     //newBundle.putString("photoDir", mCurrentPhotoPath);
                     newBundle.putString("photoDir", mPhotoURI.toString());
                 } else {
@@ -207,11 +204,10 @@ public class AddContactActivity extends Activity {
                 }
                 break;
             }
-            case R.id.pic_add:
-            {
+            case R.id.pic_add: {
                 Intent newIntent = new Intent(Intent.ACTION_GET_CONTENT);
                 newIntent.setType("image/*");
-                if(newIntent.resolveActivity(getPackageManager()) != null){
+                if (newIntent.resolveActivity(getPackageManager()) != null) {
                     startActivityForResult(newIntent, REQUEST_IMAGE_SEARCH);
                 }
                 break;
@@ -234,7 +230,7 @@ public class AddContactActivity extends Activity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
             setPic();
-        } else if(requestCode == REQUEST_IMAGE_SEARCH && resultCode == RESULT_OK){
+        } else if (requestCode == REQUEST_IMAGE_SEARCH && resultCode == RESULT_OK) {
             mPhotoURI = data.getData();
             setPic();
         }
