@@ -23,6 +23,13 @@
         android:layout_height="50dp"
         android:focusable="false"
         app:srcCompat="@android:drawable/sym_action_call" />
+    <ImageButton
+        android:id="@+id/contacts_item_SMS_button"
+
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        android:focusable="false"
+        app:srcCompat="@android:drawable/stat_notify_chat" />
 
     <ImageButton
         android:id="@+id/contacts_item_remove_button"
@@ -31,4 +38,5 @@
         android:layout_height="50dp"
         android:focusable="false"
         app:srcCompat="@android:drawable/ic_delete" />
+
 </LinearLayout>

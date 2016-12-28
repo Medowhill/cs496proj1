@@ -32,6 +32,7 @@ public class ContactsAdapter extends ArrayAdapter<Contact> {
         TextView mNameTv;
         ImageButton mDialButton;
         ImageButton mRemoveButton;
+        ImageButton mSMSButton;
     }
 
     @Override
@@ -47,6 +48,8 @@ public class ContactsAdapter extends ArrayAdapter<Contact> {
             viewHolder.mDialButton.setFocusable(false);
             viewHolder.mRemoveButton = (ImageButton) itemLayout.findViewById(R.id.contacts_item_remove_button);
             viewHolder.mRemoveButton.setFocusable(false);
+            viewHolder.mSMSButton = (ImageButton) itemLayout.findViewById(R.id.contacts_item_SMS_button);
+            viewHolder.mSMSButton.setFocusable(false);
             itemLayout.setTag(viewHolder);
         }
 
@@ -59,7 +62,8 @@ public class ContactsAdapter extends ArrayAdapter<Contact> {
         viewHolder.mRemoveButton.setOnClickListener(mOnClickListener);
         viewHolder.mRemoveButton.setTag(position);
 
-
+        viewHolder.mSMSButton.setOnClickListener(mOnClickListener);
+        viewHolder.mSMSButton.setTag(position);
 
         return itemLayout;
     }

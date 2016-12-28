@@ -97,6 +97,12 @@ public class PhoneNumberFragment extends Fragment {
                         mContactsAdapter.remove(contact);
                         break;
                     }
+                    case R.id.contacts_item_SMS_button:
+                        int position = (Integer) v.getTag();
+                        Contact contact = mContactsAdapter.getItem(position);
+                        Intent smsIntent = new Intent(Intent.ACTION_SENDTO, Uri.parse("smsto:" + contact.mPhoneNumber));
+                        startActivity(smsIntent);
+                        break;
                 }
             }
         };
