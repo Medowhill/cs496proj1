@@ -56,7 +56,6 @@ public class MainActivity extends AppCompatActivity {
                 Log.i("cs496", "onActivityResult");
                 if (resultCode == RESULT_OK) {
                     Fragment fragment = mSectionsPagerAdapter.fragments[0];
-
                     if (fragment != null) {
                         ((PhoneNumberFragment) fragment).addData(data.getBundleExtra("data"));
                     }

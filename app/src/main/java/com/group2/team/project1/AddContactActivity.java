@@ -2,8 +2,10 @@ package com.group2.team.project1;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -32,7 +34,9 @@ public class AddContactActivity extends Activity {
     private Uri mPhotoURI = null;
     String mCurrentPhotoPath = null;
 
+
     public static final int REQUEST_IMAGE_CAPTURE = 1;
+    public static final int REQUEST_IMAGE_SEARCH = 2;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -47,18 +51,17 @@ public class AddContactActivity extends Activity {
                 mNameEt.setText(gotBundle.getString("name"));
                 mPhonenumberEt.setText(gotBundle.getString("phoneNumber"));
                 modifyPosition = gotBundle.getInt("position");
-                if (gotBundle.getString("photoDir") != null) {
-
-                    //mPhotoURI = Uri.parse(gotBundle.getString("photoDir"));
-                    mCurrentPhotoPath = gotBundle.getString("photoDir");
-                    Log.i("cs496: ocCreate", mCurrentPhotoPath);
+                if (!gotBundle.getString("photoDir").equals("")) {
+                    //mCurrentPhotoPath = gotBundle.getString("photoDir");
+                    mPhotoURI = Uri.parse(gotBundle.getString("photoDir"));
+                    //Log.i("cs496: ocCreate", mCurrentPhotoPath);
                 }
 
             }
         }
 
         mProfile = (ImageView) findViewById(R.id.pic_add);
-        if (mCurrentPhotoPath == null) {
+        if (mPhotoURI == null){//(mCurrentPhotoPath == null) {
             mProfile.setImageResource(R.drawable.ic_face_black_48dp);
         } else {
             setPic();
@@ -68,16 +71,16 @@ public class AddContactActivity extends Activity {
 
     private void setPic() {
 
-        int targetW = mProfile.getWidth();
-        int targetH = mProfile.getHeight();
+        int targetW = 150; //mProfile.getWidth();
+        int targetH = 150; //mProfile.getHeight();
         try {
-            /*
-            //InputStream is = this.getContentResolver().openInputStream(mPhotoURI);
+
+            InputStream is = this.getContentResolver().openInputStream(mPhotoURI);
             BitmapFactory.Options bmOptions = new BitmapFactory.Options();
             bmOptions.inJustDecodeBounds = true;
-            BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+            //BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
             //MediaStore.Images.Media.getBitmap(this.getContentResolver(), mPhotoURI);
-            //BitmapFactory.decodeStream(is, null, bmOptions);
+            BitmapFactory.decodeStream(is, null, bmOptions);
             int photoW = bmOptions.outWidth;
             int photoH = bmOptions.outHeight;
 
@@ -85,12 +88,46 @@ public class AddContactActivity extends Activity {
 
             bmOptions.inJustDecodeBounds = false;
             bmOptions.inSampleSize = scaleFactor;
-            */
-            Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath);//, bmOptions);
-            //Bitmap bitmap = BitmapFactory.decodeStream(is, null, bmOptions);
+
+            //Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+            is = this.getContentResolver().openInputStream(mPhotoURI);
+            Bitmap bitmap = BitmapFactory.decodeStream(is, null, bmOptions);
 
             //Log.i("cs496", bitmap.getWidth() + "," + bitmap.getHeight());
             mProfile.setImageBitmap(bitmap);
+
+            /*ExifInterface exif = new ExifInterface(mPhotoURI.getPath());
+            String[] proj = {MediaStore.Images.Media.ORIENTATION};
+            Cursor cursor = getContentResolver().query(mPhotoURI, proj, null, null, null);
+            int colIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.ORIENTATION);
+            cursor.moveToFirst();
+            int orientation = cursor.getInt(colIndex);
+            String ori = cursor.getString(colIndex);
+            Log.i("cs496", mPhotoURI.toString());
+            //int orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, 0);
+            switch(orientation){
+                case ExifInterface.ORIENTATION_NORMAL:
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_90:
+                    mProfile.setRotation(90f);
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_180:
+                    mProfile.setRotation(180f);
+                    break;
+                case ExifInterface.ORIENTATION_ROTATE_270:
+                    mProfile.setRotation(270f);
+                    break;
+                case ExifInterface.ORIENTATION_FLIP_HORIZONTAL:
+                    mProfile.setScaleX(-1);
+                    break;
+                case ExifInterface.ORIENTATION_FLIP_VERTICAL:
+                    mProfile.setScaleY(-1);
+                    break;
+
+            }*/
+
+
+
         } catch (Exception e) {
             mProfile.setImageResource(R.drawable.ic_face_black_48dp);
             e.printStackTrace();
@@ -109,10 +146,11 @@ public class AddContactActivity extends Activity {
                 newBundle.putString("name", mName);
                 newBundle.putString("phoneNumber", mPhoneNumber);
                 //Log.i("cs496: add", mPhotoURI.toString());
-                if (mCurrentPhotoPath != null) {
-                    newBundle.putString("photoDir", mCurrentPhotoPath);
+                if (mPhotoURI != null){ //(mCurrentPhotoPath != null) {
+                    //newBundle.putString("photoDir", mCurrentPhotoPath);
+                    newBundle.putString("photoDir", mPhotoURI.toString());
                 } else {
-                    newBundle.putString("photoDir", null);
+                    newBundle.putString("photoDir", "");
                 }
 
                 newBundle.putInt("position", modifyPosition);
@@ -129,7 +167,7 @@ public class AddContactActivity extends Activity {
                 finish();
                 break;
             }
-            case R.id.pic_add: {
+            case R.id.new_pic_add: {
                 Intent newIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
                 if (newIntent.resolveActivity(getPackageManager()) != null) {
                     File photoFile = null;
@@ -148,11 +186,23 @@ public class AddContactActivity extends Activity {
                 }
                 break;
             }
+            case R.id.pic_add:
+            {
+                Intent newIntent = new Intent(Intent.ACTION_GET_CONTENT);
+                newIntent.setType("image/*");
+                if(newIntent.resolveActivity(getPackageManager()) != null){
+                    startActivityForResult(newIntent, REQUEST_IMAGE_SEARCH);
+                }
+
+            }
         }
     }
 
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if (requestCode == REQUEST_IMAGE_CAPTURE && resultCode == RESULT_OK) {
+            setPic();
+        } else if(requestCode == REQUEST_IMAGE_SEARCH && resultCode == RESULT_OK){
+            mPhotoURI = data.getData();
             setPic();
         }
     }

@@ -9,4 +9,5 @@ public class Contact {
     public String mPhoneNumber = "";
     public String mPhotoPath = "";
 
+
 }
