@@ -6,11 +6,14 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -38,6 +41,7 @@ public class PhoneNumberFragment extends Fragment {
     private FloatingActionButton addButton = null;
     private ArrayList<Contact> contactsList;
     private ListView mListView;
+    private EditText mSearchBox = null;
     View.OnClickListener mOnClickListener = null;
 
     public static PhoneNumberFragment newInstance() {
@@ -167,6 +171,24 @@ public class PhoneNumberFragment extends Fragment {
                 newBundle.putBoolean("isModifying", true);
                 newIntent.putExtra("data", newBundle);
                 getActivity().startActivityForResult(newIntent, MainActivity.REQUEST_CONTACT_MODIFY);
+            }
+        });
+        mSearchBox = (EditText) rootView.findViewById(R.id.searchContactEt);
+
+        mSearchBox.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {
+                mContactsAdapter.getFilter().filter(s);
+            }
+
+            @Override
+            public void afterTextChanged(Editable s) {
+
             }
         });
         return rootView;

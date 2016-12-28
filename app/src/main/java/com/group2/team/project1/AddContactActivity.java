@@ -81,9 +81,12 @@ public class AddContactActivity extends Activity {
             mPhonenumberEt.setEnabled(false);
             mProfile.setEnabled(false);
             mAddCommitButton.setEnabled(false);
-            mAddCommitButton.setVisibility(View.INVISIBLE);
+            mAddCommitButton.setVisibility(View.GONE);
             mCameraButton.setEnabled(false);
 
+        } else {
+            mEditButton.setEnabled(false);
+            mEditButton.setVisibility(View.GONE);
         }
 
     }
@@ -221,7 +224,7 @@ public class AddContactActivity extends Activity {
                 mAddCommitButton.setVisibility(View.VISIBLE);
                 mCameraButton.setEnabled(true);
                 mEditButton.setEnabled(false);
-                mEditButton.setVisibility(View.INVISIBLE);
+                mEditButton.setVisibility(View.GONE);
                 break;
             }
         }

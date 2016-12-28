@@ -7,6 +7,8 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
@@ -14,17 +16,20 @@ import com.group2.team.project1.Contact;
 import com.group2.team.project1.R;
 
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by q on 2016-12-26.
  */
 
-public class ContactsAdapter extends ArrayAdapter<Contact> {
-
+public class ContactsAdapter extends ArrayAdapter<Contact> implements Filterable {
+    //private List<Contact> original;
     private View.OnClickListener mOnClickListener;
     public ContactsAdapter(Context context, int resources, int textViewResourceId, List<Contact> data, View.OnClickListener onClickListener){
         super(context, resources, textViewResourceId, data);
+        //original = new ArrayList<>();
+        //original.addAll(data);
         mOnClickListener = onClickListener;
     }
 
@@ -34,6 +39,9 @@ public class ContactsAdapter extends ArrayAdapter<Contact> {
         ImageButton mRemoveButton;
         ImageButton mSMSButton;
     }
+
+
+
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent){
@@ -67,4 +75,41 @@ public class ContactsAdapter extends ArrayAdapter<Contact> {
 
         return itemLayout;
     }
+
+    /*@Override
+    public Filter getFilter(){
+        return new Filter(){
+            @Override
+            protected FilterResults performFiltering(CharSequence cs){
+                String filterString = cs.toString().toLowerCase();
+
+                FilterResults results = new FilterResults();
+
+                final ArrayList<Contact> list = new ArrayList<>();
+                if(cs != null || cs.length() != 0) {
+                    for (int i = 0; i <original.size(); i++){
+                        Contact contact = original.get(i);
+                        if(contact.mName.toLowerCase().contains(filterString)){
+                            list.add(contact);
+                        }
+                    }
+                    results.values = list;
+                    results.count = list.size();
+                } else {
+                    results.values = original;
+                    results.count = original.size();
+                }
+
+                return results;
+            }
+            protected void publishResults(CharSequence cs, FilterResults rs){
+                notifyDataSetChanged();
+                clear();
+                addAll((List<Contact>) rs.values);
+                notifyDataSetInvalidated();
+
+            }
+        };
+    }*/
 }
+

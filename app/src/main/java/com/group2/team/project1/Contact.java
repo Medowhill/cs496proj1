@@ -9,5 +9,8 @@ public class Contact {
     public String mPhoneNumber = "";
     public String mPhotoPath = "";
 
-
+    @Override
+    public String toString(){
+        return mName;
+    }
 }

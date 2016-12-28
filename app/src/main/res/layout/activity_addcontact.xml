@@ -68,20 +68,11 @@
                     android:layout_height="wrap_content"
                     android:layout_marginLeft="20dp"
                     android:layout_marginStart="20dp"
-
+                    android:layout_weight="1"
                     android:layout_marginTop="10dp"
                     android:onClick="onClick"
                     android:text="OK" />
 
-                <Button
-                    android:id="@+id/addCancelButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginLeft="20dp"
-                    android:layout_marginStart="20dp"
-                    android:layout_marginTop="10dp"
-                    android:onClick="onClick"
-                    android:text="Cancel" />
                 <Button
                     android:id="@+id/addEditButton"
                     android:layout_width="wrap_content"
@@ -89,8 +80,21 @@
                     android:layout_marginLeft="20dp"
                     android:layout_marginStart="20dp"
                     android:layout_marginTop="10dp"
+                    android:layout_weight="1"
                     android:onClick="onClick"
                     android:text="Edit" />
+                <Button
+                    android:id="@+id/addCancelButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="20dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginRight="20dp"
+                    android:layout_marginEnd="20dp"
+                    android:layout_marginTop="10dp"
+                    android:layout_weight="1"
+                    android:onClick="onClick"
+                    android:text="Cancel" />
             </LinearLayout>
         </RelativeLayout>
     </ScrollView>
