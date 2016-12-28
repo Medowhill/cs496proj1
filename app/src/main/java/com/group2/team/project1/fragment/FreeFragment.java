@@ -232,6 +232,7 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
                 editText.setText("");
                 items.add(0, item);
                 recyclerView.getAdapter().notifyDataSetChanged();
+                recyclerView.getLayoutManager().scrollToPosition(0);
                 recyclerView.startAnimation(animation);
             }
         });

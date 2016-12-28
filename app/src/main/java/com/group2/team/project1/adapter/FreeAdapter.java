@@ -15,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.group2.team.project1.FreeItem;
+import com.group2.team.project1.MainActivity;
 import com.group2.team.project1.R;
 import com.group2.team.project1.fragment.FreeFragment;
 
@@ -39,7 +40,15 @@ public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
         @Override
         public void handleMessage(Message msg) {
             long date = msg.getData().getLong("date");
-            tmpImageViews.get(date).setImageBitmap(tmpBitmaps.get(date));
+            ImageView imageView = tmpImageViews.remove(date);
+            final Bitmap bitmap;
+            imageView.setImageBitmap(bitmap = tmpBitmaps.remove(date));
+            imageView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    ((MainActivity) fragment.getActivity()).setImageView(bitmap);
+                }
+            });
         }
     };
 
