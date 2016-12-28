@@ -338,6 +338,26 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
                         }
                     }
                 });
+                editText.addTextChangedListener(new TextWatcher() {
+                    String previousString = "";
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    }
+
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        previousString = s.toString();
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        if (editText.getLineCount() > 1) {
+                            editText.setText(previousString);
+                            editText.setSelection(editText.length());
+                        }
+                    }
+                });
             }
         });
 
