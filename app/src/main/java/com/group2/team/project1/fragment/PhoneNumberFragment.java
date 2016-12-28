@@ -81,18 +81,13 @@ public class PhoneNumberFragment extends Fragment {
             @Override
             public void onClick(View v){
                 switch(v.getId()){
-                    case R.id.contacts_item_edit_button:
+                    case R.id.contacts_item_dial_button:
                     {
                         int position = (Integer) v.getTag();
                         Contact contact = mContactsAdapter.getItem(position);
-                        Intent newIntent = new Intent(getActivity(), AddContactActivity.class);
-                        Bundle newBundle = new Bundle();
-                        newBundle.putString("name", contact.mName);
-                        newBundle.putString("phoneNumber", contact.mPhoneNumber);
-                        newBundle.putInt("position", position);
-                        newBundle.putString("photoDir", contact.mPhotoPath);
-                        newIntent.putExtra("data", newBundle);
-                        getActivity().startActivityForResult(newIntent, MainActivity.REQUEST_CONTACT_MODIFY);
+                        Intent dialIntent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + contact.mPhoneNumber));
+                        startActivity(dialIntent);
+
                         break;
                     }
                     case R.id.contacts_item_remove_button:
@@ -156,9 +151,15 @@ public class PhoneNumberFragment extends Fragment {
         mListView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
             @Override
             public void onItemClick(AdapterView parent, View v, int position, long id){
-                Contact target = (Contact) parent.getItemAtPosition(position);
-                Intent dialIntent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + target.mPhoneNumber));
-                startActivity(dialIntent);
+                Contact contact = (Contact) parent.getItemAtPosition(position);
+                Intent newIntent = new Intent(getActivity(), AddContactActivity.class);
+                Bundle newBundle = new Bundle();
+                newBundle.putString("name", contact.mName);
+                newBundle.putString("phoneNumber", contact.mPhoneNumber);
+                newBundle.putInt("position", position);
+                newBundle.putString("photoDir", contact.mPhotoPath);
+                newIntent.putExtra("data", newBundle);
+                getActivity().startActivityForResult(newIntent, MainActivity.REQUEST_CONTACT_MODIFY);
             }
         });
         return rootView;

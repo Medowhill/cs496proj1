@@ -9,22 +9,26 @@
         android:id="@+id/contacts_item_name_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginLeft="20dp"
-        android:layout_marginStart="20dp"
-        android:layout_weight="1"
+        android:ellipsize="marquee"
+        android:maxLines = "1"
+        android:layout_gravity= "center_vertical"
+        android:layout_weight="12"
         android:textSize="25sp" />
 
     <ImageButton
-        android:id="@+id/contacts_item_edit_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:id="@+id/contacts_item_dial_button"
+        android:layout_width="50dp"
+
+
+        android:layout_height="50dp"
         android:focusable="false"
-        app:srcCompat="@android:drawable/ic_menu_edit" />
+        app:srcCompat="@android:drawable/sym_action_call" />
 
     <ImageButton
         android:id="@+id/contacts_item_remove_button"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+
+        android:layout_width="50dp"
+        android:layout_height="50dp"
         android:focusable="false"
         app:srcCompat="@android:drawable/ic_delete" />
 </LinearLayout>
