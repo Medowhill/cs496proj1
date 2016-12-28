@@ -30,7 +30,7 @@ public class AddContactActivity extends Activity {
     private int modifyPosition = -1;
     private ImageView mProfile;
     private Uri mPhotoURI = null;
-    String mCurrentPhotoPath;
+    String mCurrentPhotoPath = null;
 
     public static final int REQUEST_IMAGE_CAPTURE = 1;
 
@@ -48,16 +48,17 @@ public class AddContactActivity extends Activity {
                 mPhonenumberEt.setText(gotBundle.getString("phoneNumber"));
                 modifyPosition = gotBundle.getInt("position");
                 if (gotBundle.getString("photoDir") != null) {
-                    Log.i("cs496: ocCreate", gotBundle.getString("photoDir"));
-                    mPhotoURI = Uri.parse(gotBundle.getString("photoDir"));
-                    Log.i("cs496: onCrreate", mPhotoURI.toString());
+
+                    //mPhotoURI = Uri.parse(gotBundle.getString("photoDir"));
+                    mCurrentPhotoPath = gotBundle.getString("photoDir");
+                    Log.i("cs496: ocCreate", mCurrentPhotoPath);
                 }
 
             }
         }
 
         mProfile = (ImageView) findViewById(R.id.pic_add);
-        if (mPhotoURI == null) {
+        if (mCurrentPhotoPath == null) {
             mProfile.setImageResource(R.drawable.ic_face_black_48dp);
         } else {
             setPic();
@@ -70,12 +71,13 @@ public class AddContactActivity extends Activity {
         int targetW = mProfile.getWidth();
         int targetH = mProfile.getHeight();
         try {
-            InputStream is = this.getContentResolver().openInputStream(mPhotoURI);
+            /*
+            //InputStream is = this.getContentResolver().openInputStream(mPhotoURI);
             BitmapFactory.Options bmOptions = new BitmapFactory.Options();
             bmOptions.inJustDecodeBounds = true;
-            //BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
+            BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
             //MediaStore.Images.Media.getBitmap(this.getContentResolver(), mPhotoURI);
-            BitmapFactory.decodeStream(is, null, bmOptions);
+            //BitmapFactory.decodeStream(is, null, bmOptions);
             int photoW = bmOptions.outWidth;
             int photoH = bmOptions.outHeight;
 
@@ -83,11 +85,11 @@ public class AddContactActivity extends Activity {
 
             bmOptions.inJustDecodeBounds = false;
             bmOptions.inSampleSize = scaleFactor;
+            */
+            Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath);//, bmOptions);
+            //Bitmap bitmap = BitmapFactory.decodeStream(is, null, bmOptions);
 
-            //Bitmap bitmap = BitmapFactory.decodeFile(mCurrentPhotoPath, bmOptions);
-            Bitmap bitmap = BitmapFactory.decodeStream(is, null, bmOptions);
-
-            Log.i("cs496", bitmap.getWidth() + "," + bitmap.getHeight());
+            //Log.i("cs496", bitmap.getWidth() + "," + bitmap.getHeight());
             mProfile.setImageBitmap(bitmap);
         } catch (Exception e) {
             mProfile.setImageResource(R.drawable.ic_face_black_48dp);
@@ -106,11 +108,11 @@ public class AddContactActivity extends Activity {
 
                 newBundle.putString("name", mName);
                 newBundle.putString("phoneNumber", mPhoneNumber);
-                Log.i("cs496: add", mPhotoURI.toString());
-                if (mPhotoURI != null) {
-                    newBundle.putString("photoDir", mPhotoURI.toString());
+                //Log.i("cs496: add", mPhotoURI.toString());
+                if (mCurrentPhotoPath != null) {
+                    newBundle.putString("photoDir", mCurrentPhotoPath);
                 } else {
-                    newBundle.putString("photoDir", " ");
+                    newBundle.putString("photoDir", null);
                 }
 
                 newBundle.putInt("position", modifyPosition);
@@ -118,7 +120,7 @@ public class AddContactActivity extends Activity {
 
                 Intent newIntent = new Intent(this, MainActivity.class);
                 newIntent.putExtra("data", newBundle);
-
+                Log.i("cs496", "onClick");
                 setResult(RESULT_OK, newIntent);
                 finish();
                 break;

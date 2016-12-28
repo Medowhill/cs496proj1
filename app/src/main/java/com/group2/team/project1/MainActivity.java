@@ -53,8 +53,8 @@ public class MainActivity extends AppCompatActivity {
                 EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
                 break;
             case REQUEST_CONTACT_ADD:
+                Log.i("cs496", "onActivityResult");
                 if (resultCode == RESULT_OK) {
-                    Toast.makeText(getApplicationContext(), "add tried", Toast.LENGTH_LONG).show();
                     Fragment fragment = mSectionsPagerAdapter.fragments[0];
 
                     if (fragment != null) {

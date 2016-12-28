@@ -44,7 +44,9 @@ public class ContactsAdapter extends ArrayAdapter<Contact> {
             viewHolder = new ViewHolder();
             viewHolder.mNameTv = (TextView) itemLayout.findViewById(R.id.contacts_item_name_text);
             viewHolder.mEditButton = (ImageButton) itemLayout.findViewById(R.id.contacts_item_edit_button);
+            viewHolder.mEditButton.setFocusable(false);
             viewHolder.mRemoveButton = (ImageButton) itemLayout.findViewById(R.id.contacts_item_remove_button);
+            viewHolder.mRemoveButton.setFocusable(false);
             itemLayout.setTag(viewHolder);
         }
 
@@ -53,6 +55,7 @@ public class ContactsAdapter extends ArrayAdapter<Contact> {
 
         viewHolder.mEditButton.setOnClickListener(mOnClickListener);
         viewHolder.mEditButton.setTag(position);
+
         viewHolder.mRemoveButton.setOnClickListener(mOnClickListener);
         viewHolder.mRemoveButton.setTag(position);
 

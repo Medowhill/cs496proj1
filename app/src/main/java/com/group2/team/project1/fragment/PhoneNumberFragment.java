@@ -2,9 +2,11 @@ package com.group2.team.project1.fragment;
 
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -23,12 +25,14 @@ import org.json.JSONObject;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.text.Collator;
 import java.util.ArrayList;
+import java.util.Comparator;
 
 // Fragment class for A tab (Phone book)
 public class PhoneNumberFragment extends Fragment {
 
-    private static final String CONTACTS = "./contacts";
+    private static final String CONTACTS = "contacts";
     private JSONArray contacts_json = null;
     private ContactsAdapter mContactsAdapter = null;
     private FloatingActionButton addButton = null;
@@ -40,11 +44,6 @@ public class PhoneNumberFragment extends Fragment {
         return new PhoneNumberFragment();
     }
 
-    public static PhoneNumberFragment newInstance(Bundle bundle){
-        PhoneNumberFragment newPhoneNumberFragment = new PhoneNumberFragment();
-        newPhoneNumberFragment.setArguments(bundle);
-        return newPhoneNumberFragment;
-    }
 
     public void onCreate(Bundle savedInstanceState){
 
@@ -70,6 +69,7 @@ public class PhoneNumberFragment extends Fragment {
                     JSONObject j = contacts_json.getJSONObject(i);
                     newContact.mName = j.getString("name");
                     newContact.mPhoneNumber = j.getString("phoneNumber");
+                    newContact.mPhotoPath = j.getString("photoDir");
                     contactsList.add(newContact);
                 } catch(Exception e){
                     e.printStackTrace();
@@ -90,6 +90,7 @@ public class PhoneNumberFragment extends Fragment {
                         newBundle.putString("name", contact.mName);
                         newBundle.putString("phoneNumber", contact.mPhoneNumber);
                         newBundle.putInt("position", position);
+                        newBundle.putString("photoDir", contact.mPhotoPath);
                         newIntent.putExtra("data", newBundle);
                         getActivity().startActivityForResult(newIntent, MainActivity.REQUEST_CONTACT_MODIFY);
                         break;
@@ -106,10 +107,16 @@ public class PhoneNumberFragment extends Fragment {
         };
 
         mContactsAdapter = new ContactsAdapter(getActivity(), R.layout.contacts_list_item, R.id.contacts_item_name_text, contactsList, mOnClickListener);
+        mContactsAdapter.sort(new Comparator<Contact>(){
+            public int compare(Contact lhs, Contact rhs){
+                Collator c = Collator.getInstance();
+                return c.compare(lhs.mName, rhs.mName);
+            }
+        });
     }
 
     public void addData(Bundle bundle){
-
+        Log.i("cs496", "addData");
         Contact newContact = new Contact();
         newContact.mName = bundle.getString("name");
         newContact.mPhoneNumber = bundle.getString("phoneNumber");
@@ -118,7 +125,14 @@ public class PhoneNumberFragment extends Fragment {
             Contact oldContact = mContactsAdapter.getItem(modifyPosition);
             mContactsAdapter.remove(oldContact);
         }
+        newContact.mPhotoPath = bundle.getString("photoDir");
         mContactsAdapter.add(newContact);
+        mContactsAdapter.sort(new Comparator<Contact>(){
+            public int compare(Contact lhs, Contact rhs){
+                Collator c = Collator.getInstance();
+                return c.compare(lhs.mName, rhs.mName);
+            }
+        });
 
     }
     @Override
@@ -143,6 +157,8 @@ public class PhoneNumberFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView parent, View v, int position, long id){
                 Contact target = (Contact) parent.getItemAtPosition(position);
+                Intent dialIntent = new Intent(Intent.ACTION_DIAL, Uri.parse("tel:" + target.mPhoneNumber));
+                startActivity(dialIntent);
             }
         });
         return rootView;
@@ -156,6 +172,7 @@ public class PhoneNumberFragment extends Fragment {
                 JSONObject newObject = new JSONObject();
                 newObject.put("name", i.mName);
                 newObject.put("phoneNumber", i.mPhoneNumber);
+                newObject.put("photoDir", i.mPhotoPath);
                 array.put(newObject);
             }
             catch (Exception e){
