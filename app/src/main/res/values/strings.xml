@@ -5,4 +5,10 @@
     <string name="free_delete">Delete</string>
     <string name="free_share_text">Share Text</string>
     <string name="free_share_photo">Share Photo</string>
+    <string name="free_search_from">From</string>
+    <string name="free_search_to">To</string>
+    <string name="free_search_include">Including</string>
+    <string name="free_search_positive">Search</string>
+    <string name="free_search_negative">Cancel</string>
+    <string name="free_search_text">Searching for the memos</string>
 </resources>

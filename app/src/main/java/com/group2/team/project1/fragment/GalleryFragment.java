@@ -12,6 +12,8 @@ import android.widget.ImageView;
 import com.group2.team.project1.R;
 import com.group2.team.project1.adapter.GalleryAdapter;
 
+import uk.co.senab.photoview.PhotoViewAttacher;
+
 // Fragment class for B tab (Gallery)
 public class GalleryFragment extends Fragment {
 
@@ -24,11 +26,12 @@ public class GalleryFragment extends Fragment {
         View rootView = inflater.inflate(R.layout.fragment_gallery, container, false);
 
         final GalleryAdapter adapter = new GalleryAdapter(getContext());
-        for (int i = 1; i < 10; i++) {
+        for (int i = 1; i < 21; i++) {
             adapter.add(getResources().getIdentifier("t" + i, "drawable", getActivity().getPackageName()));
         }
 
         final ImageView iv1 = (ImageView) rootView.findViewById(R.id.imageView1);
+        final PhotoViewAttacher attacher = new PhotoViewAttacher(iv1);
 
         Gallery g = (Gallery) rootView.findViewById(R.id.gallery1);
         g.setAdapter(adapter);
@@ -36,6 +39,7 @@ public class GalleryFragment extends Fragment {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 iv1.setImageResource(adapter.get(position));
+                attacher.update();
             }
         });
         return rootView;

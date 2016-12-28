@@ -12,11 +12,12 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
+
         <TextView
+            android:id="@+id/tvDebug"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:id="@+id/tvDebug"
-            android:text="tvDebug"/>
+            android:text="tvDebug" />
 
         <ListView
             android:id="@+id/listView_phone"
@@ -25,10 +26,10 @@
     </LinearLayout>
 
     <android.support.design.widget.FloatingActionButton
+        android:id="@+id/addButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="bottom|right"
-        android:id="@+id/addButton"
         app:srcCompat="@android:drawable/ic_input_add" />
 
 </FrameLayout>

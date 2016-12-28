@@ -2,16 +2,21 @@ package com.group2.team.project1.fragment;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.location.Address;
+import android.location.Geocoder;
+import android.location.Location;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
-import android.os.Message;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.content.ContextCompat;
@@ -27,13 +32,23 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.ArrayAdapter;
+import android.widget.CalendarView;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
+import com.group2.team.project1.ActivityResultEvent;
+import com.group2.team.project1.EventBus;
 import com.group2.team.project1.FreeItem;
-import com.group2.team.project1.MainActivity;
 import com.group2.team.project1.R;
 import com.group2.team.project1.adapter.FreeAdapter;
+import com.squareup.otto.Subscribe;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -43,24 +58,40 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.List;
+import java.util.Locale;
 
 // Fragment class for C tab (Free)
-public class FreeFragment extends Fragment {
+public class FreeFragment extends Fragment implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
-    final private String FILE_NAME = "FreeFragmentDataSave";
-    private ArrayList<FreeItem> items;
-    private boolean photo = false;
+    final public static int REQUEST_CAMERA = 1, REQUEST_GALLERY = 2, PERMISSION_REQUEST_STORAGE = 3, PERMISSION_REQUEST_LOCATION = 4;
+    final private static int PHOTO_WIDTH_MAX = 1440, PHOTO_HEIGHT_MAX = 1440;
+    final private static String FILE_NAME = "FreeFragmentDataSave";
+
     private RecyclerView recyclerView;
     private EditText editText;
     private ImageButton buttonSave, buttonPhoto;
+    private FloatingActionButton fabSearch, fabCancel;
+    private LinearLayout layoutMemo, layoutSearch;
+    private TextView textViewDate, textViewInclude;
     private Animation animation;
+
+    private GoogleApiClient googleApiClient;
+    private ArrayList<FreeItem> items, savedItems;
+    private boolean photo = false, searching = false;
+    private int position;
+    private Bitmap bitmap;
+    private String currentPath;
+    private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
 
     public FreeFragment() {
         items = new ArrayList<>();
+        savedItems = new ArrayList<>();
     }
 
     public static FreeFragment newInstance() {
@@ -94,6 +125,26 @@ public class FreeFragment extends Fragment {
                 }
             }
         }
+
+        if (googleApiClient == null)
+            googleApiClient = new GoogleApiClient.Builder(getContext()).addConnectionCallbacks(this).addOnConnectionFailedListener(this).addApi(LocationServices.API).build();
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+        Log.i("cs496", "connected");
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_LOCATION);
+        } else
+            getLocationAfterGetPermission();
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
     }
 
     @Override
@@ -106,10 +157,16 @@ public class FreeFragment extends Fragment {
         editText = (EditText) rootView.findViewById(R.id.free_editText);
         buttonSave = (ImageButton) rootView.findViewById(R.id.free_button_save);
         buttonPhoto = (ImageButton) rootView.findViewById(R.id.free_button_photo);
+        fabSearch = (FloatingActionButton) rootView.findViewById(R.id.free_fab_search);
+        fabCancel = (FloatingActionButton) rootView.findViewById(R.id.free_fab_cancel);
+        layoutMemo = (LinearLayout) rootView.findViewById(R.id.free_linearLayout_memo);
+        layoutSearch = (LinearLayout) rootView.findViewById(R.id.free_linearLayout_search);
+        textViewDate = (TextView) rootView.findViewById(R.id.free_textView_date);
+        textViewInclude = (TextView) rootView.findViewById(R.id.free_textView_include);
 
         recyclerView.setHasFixedSize(true);
         recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
-        recyclerView.setAdapter(new FreeAdapter((MainActivity) getActivity(), items));
+        recyclerView.setAdapter(new FreeAdapter(getContext(), this, items));
 
         editText.addTextChangedListener(new TextWatcher() {
             String previousString = "";
@@ -144,7 +201,6 @@ public class FreeFragment extends Fragment {
                 long time = Calendar.getInstance().getTime().getTime();
                 FreeItem item = new FreeItem(time, editText.getText().toString(), photo);
                 if (photo) {
-                    Bitmap bitmap = ((MainActivity) getActivity()).getBitmap();
                     try {
                         FileOutputStream fos = getActivity().openFileOutput(time + "", Activity.MODE_PRIVATE);
                         bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
@@ -152,7 +208,7 @@ public class FreeFragment extends Fragment {
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
-                    ((MainActivity) getActivity()).recycleBitmap();
+                    bitmap.recycle();
                     buttonPhoto.setBackgroundResource(R.drawable.photo_add);
                     photo = false;
                 }
@@ -188,7 +244,7 @@ public class FreeFragment extends Fragment {
                                 Uri photoURI = FileProvider.getUriForFile(getActivity(), "com.group2.team.project1", file);
                                 intent.putExtra(MediaStore.EXTRA_OUTPUT, photoURI);
                                 if (intent.resolveActivity(getActivity().getPackageManager()) != null)
-                                    getActivity().startActivityForResult(intent, MainActivity.REQUEST_CAMERA_FROM_FREE);
+                                    ActivityCompat.startActivityForResult(getActivity(), intent, REQUEST_CAMERA, null);
                             }
                         }
                     });
@@ -198,17 +254,102 @@ public class FreeFragment extends Fragment {
                             Intent intent = new Intent(Intent.ACTION_PICK);
                             intent.setType("image/*");
                             dialog.dismiss();
-                            getActivity().startActivityForResult(intent, MainActivity.REQUEST_GALLERY_FROM_FREE);
+                            ActivityCompat.startActivityForResult(getActivity(), intent, REQUEST_GALLERY, null);
                         }
                     });
                 } else {
-                    ((MainActivity) getActivity()).recycleBitmap();
+                    bitmap.recycle();
                     buttonPhoto.setBackgroundResource(R.drawable.photo_add);
                     photo = false;
                 }
             }
         });
+
+        fabSearch.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                View view = inflater.inflate(R.layout.dialog_free_search, null);
+                final CalendarView calendarView1 = (CalendarView) view.findViewById(R.id.free_calendarView1), calendarView2 = (CalendarView) view.findViewById(R.id.free_calendarView2);
+                final EditText editText = (EditText) view.findViewById(R.id.free_editText_search);
+                AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+                builder.setView(view);
+                builder.setPositiveButton(R.string.free_search_positive, new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        long day = 24L * 3600 * 1000;
+                        long date1 = calendarView1.getDate() / day * day, date2 = calendarView2.getDate() / day * day + day;
+                        savedItems.addAll(items);
+                        items.clear();
+                        for (FreeItem item : savedItems) {
+                            long date = item.getDate();
+                            if (date1 <= date && date < date2 && item.getContent().contains(editText.getText().toString()))
+                                items.add(item);
+                        }
+                        recyclerView.getAdapter().notifyDataSetChanged();
+                        fabCancel.setVisibility(View.VISIBLE);
+                        layoutMemo.setVisibility(View.GONE);
+                        layoutSearch.setVisibility(View.VISIBLE);
+                        textViewDate.setText("From " + format.format(new Date(date1)) + " to " + format.format(new Date(date2)));
+                        textViewInclude.setText("Including \"" + editText.getText().toString() + "\"");
+                        searching = true;
+                    }
+                });
+                builder.setNegativeButton(R.string.free_search_negative, null);
+                builder.show();
+
+                calendarView1.setDate(calendarView2.getDate() - 30L * 24 * 3600 * 1000);
+                calendarView1.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
+                    @Override
+                    public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
+                        if (calendarView1.getDate() > calendarView2.getDate()) {
+                            Toast.makeText(getContext(), "Invalid date", Toast.LENGTH_LONG).show();
+                            calendarView1.setDate(calendarView2.getDate());
+                        }
+                    }
+                });
+                calendarView2.setOnDateChangeListener(new CalendarView.OnDateChangeListener() {
+                    @Override
+                    public void onSelectedDayChange(CalendarView view, int year, int month, int dayOfMonth) {
+                        if (calendarView1.getDate() > calendarView2.getDate()) {
+                            Toast.makeText(getContext(), "Invalid date", Toast.LENGTH_LONG).show();
+                            calendarView2.setDate(calendarView1.getDate());
+                        } else if (calendarView2.getDate() > Calendar.getInstance().getTime().getTime()) {
+                            Toast.makeText(getContext(), "Invalid date", Toast.LENGTH_LONG).show();
+                            calendarView2.setDate(Calendar.getInstance().getTime().getTime());
+                        }
+                    }
+                });
+            }
+        });
+
+        fabCancel.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                fabCancel.setVisibility(View.INVISIBLE);
+                layoutSearch.setVisibility(View.GONE);
+                layoutMemo.setVisibility(View.VISIBLE);
+                items.clear();
+                items.addAll(savedItems);
+                savedItems.clear();
+                recyclerView.getAdapter().notifyDataSetChanged();
+                searching = false;
+            }
+        });
         return rootView;
+    }
+
+    @Override
+    public void onActivityCreated(@Nullable Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+        EventBus.getInstance().register(this);
+        googleApiClient.connect();
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+        EventBus.getInstance().unregister(this);
+        googleApiClient.disconnect();
     }
 
     @Override
@@ -228,6 +369,67 @@ public class FreeFragment extends Fragment {
             }
         }
         writeFile(array.toString());
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case PERMISSION_REQUEST_STORAGE:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    sharePhotoAfterGetPermission(position);
+                break;
+            case PERMISSION_REQUEST_LOCATION:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    getLocationAfterGetPermission();
+                break;
+        }
+    }
+
+    @SuppressWarnings("unused")
+    @Subscribe
+    public void onActivityResultEvent(@NonNull ActivityResultEvent event) {
+        onActivityResult(event.getRequestCode(), event.getResultCode(), event.getData());
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        switch (requestCode) {
+            case FreeFragment.REQUEST_CAMERA:
+                if (resultCode == Activity.RESULT_OK) {
+                    Bitmap tmp = BitmapFactory.decodeFile(currentPath);
+                    if (tmp == null) {
+                        Toast.makeText(getContext(), "Fail to load the photo", Toast.LENGTH_LONG).show();
+                        return;
+                    }
+                    setPhoto(tmp);
+                    setButtonPhoto();
+                }
+                break;
+            case FreeFragment.REQUEST_GALLERY:
+                if (resultCode == Activity.RESULT_OK) {
+                    try {
+                        Uri imageUri = data.getData();
+                        InputStream imageStream = getActivity().getContentResolver().openInputStream(imageUri);
+                        setPhoto(BitmapFactory.decodeStream(imageStream));
+                        setButtonPhoto();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                break;
+        }
+    }
+
+    private void setPhoto(Bitmap tmp) {
+        int width = tmp.getWidth();
+        int height = tmp.getHeight();
+
+        if (width > PHOTO_WIDTH_MAX || height > PHOTO_HEIGHT_MAX) {
+            float scaleFactor = Math.min(1.f * PHOTO_WIDTH_MAX / width, 1.f * PHOTO_HEIGHT_MAX / height);
+            bitmap = Bitmap.createScaledBitmap(tmp, (int) (width * scaleFactor), (int) (height * scaleFactor), false);
+            tmp.recycle();
+        } else
+            bitmap = tmp;
     }
 
     private String readFile() {
@@ -262,7 +464,7 @@ public class FreeFragment extends Fragment {
         File storageDir = getActivity().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         File image = File.createTempFile(imageFileName, ".jpg", storageDir);
 
-        ((MainActivity) getActivity()).setCurrentPath(image.getAbsolutePath());
+        currentPath = image.getAbsolutePath();
         return image;
     }
 
@@ -272,51 +474,80 @@ public class FreeFragment extends Fragment {
         photo = true;
     }
 
-    public void deleteItem(int position) {
-        items.remove(position);
-        recyclerView.getAdapter().notifyDataSetChanged();
-    }
+    public void handleDropdownClick(final int position) {
+        final ArrayAdapter<String> adapter = new ArrayAdapter<>(getContext(), android.R.layout.simple_list_item_1);
+        adapter.add(getString(R.string.free_edit));
+        adapter.add(getString(R.string.free_delete));
+        adapter.add(getString(R.string.free_share_text));
+        if (items.get(position).isPhoto())
+            adapter.add(getString(R.string.free_share_photo));
 
-    public void editItem(int position) {
-        FreeItem item = items.remove(position);
-        recyclerView.getAdapter().notifyDataSetChanged();
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity(), R.style.ListDialog);
+        builder.setAdapter(adapter, new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                switch (which) {
+                    case 0:
+                        if (searching) {
+                            Toast.makeText(getContext(), "You cannot edit the memo in the search mode.", Toast.LENGTH_LONG).show();
+                            return;
+                        }
+                        FreeItem item = items.remove(position);
+                        recyclerView.getAdapter().notifyDataSetChanged();
 
-        editText.setText(item.getContent());
-        if (item.isPhoto()) {
-            ((MainActivity) getActivity()).recycleBitmap();
-            try {
-                FileInputStream fis = getContext().openFileInput(item.getDate() + "");
-                byte[] arr = new byte[fis.available()];
-                fis.read(arr);
-                ((MainActivity) getActivity()).setBitmap(BitmapFactory.decodeByteArray(arr, 0, arr.length));
-                fis.close();
-            } catch (IOException e) {
-                e.printStackTrace();
+                        editText.setText(item.getContent());
+                        if (item.isPhoto()) {
+                            if (bitmap != null && !bitmap.isRecycled())
+                                bitmap.recycle();
+                            try {
+                                FileInputStream fis = getContext().openFileInput(item.getDate() + "");
+                                byte[] arr = new byte[fis.available()];
+                                fis.read(arr);
+                                bitmap = BitmapFactory.decodeByteArray(arr, 0, arr.length);
+                                fis.close();
+                            } catch (IOException e) {
+                                e.printStackTrace();
+                            }
+                            buttonPhoto.setBackgroundResource(R.drawable.photo_remove);
+                            photo = true;
+                        } else {
+                            buttonPhoto.setBackgroundResource(R.drawable.photo_add);
+                            photo = false;
+                        }
+                        break;
+                    case 1:
+                        FreeItem itm = items.remove(position);
+                        if (searching)
+                            savedItems.remove(itm);
+                        recyclerView.getAdapter().notifyDataSetChanged();
+                        break;
+                    case 2:
+                        Intent intent = new Intent(android.content.Intent.ACTION_SEND);
+                        intent.setType("text/plain");
+                        intent.putExtra(android.content.Intent.EXTRA_TEXT, items.get(position).getContent());
+                        getActivity().startActivity(Intent.createChooser(intent, getString(R.string.free_share_text)));
+                        break;
+                    case 3:
+                        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                            FreeFragment.this.position = position;
+                            requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_STORAGE);
+                        } else
+                            sharePhotoAfterGetPermission(position);
+                        break;
+                }
             }
-            buttonPhoto.setBackgroundResource(R.drawable.photo_remove);
-            photo = true;
-        } else {
-            buttonPhoto.setBackgroundResource(R.drawable.photo_add);
-            photo = false;
+        });
+        builder.show();
+    }
+
+    public void getLocationAfterGetPermission() {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            Location location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
+            if (location != null) {
+                String address = getAddress(location.getLatitude(), location.getLongitude());
+                Log.i("cs496", address);
+            }
         }
-    }
-
-    public boolean hasPhoto(int position) {
-        return items.get(position).isPhoto();
-    }
-
-    public void shareText(int position) {
-        Intent intent = new Intent(android.content.Intent.ACTION_SEND);
-        intent.setType("text/plain");
-        intent.putExtra(android.content.Intent.EXTRA_TEXT, items.get(position).getContent());
-        getActivity().startActivity(Intent.createChooser(intent, getString(R.string.free_share_text)));
-    }
-
-    public void sharePhoto(int position) {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
-            ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, MainActivity.PERMISSION_REQUEST_FROM_FREE);
-        else
-            sharePhotoAfterGetPermission(position);
     }
 
     public void sharePhotoAfterGetPermission(int position) {
@@ -347,5 +578,25 @@ public class FreeFragment extends Fragment {
 
         intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(f));
         getActivity().startActivity(Intent.createChooser(intent, getString(R.string.free_share_photo)));
+    }
+
+    private String getAddress(double latitude, double longitude) {
+        String nowAddress = "Cannot load the address";
+        Geocoder geocoder = new Geocoder(getContext(), Locale.KOREA);
+        List<Address> address;
+        try {
+            if (geocoder != null) {
+                address = geocoder.getFromLocation(latitude, longitude, 1);
+                if (address != null && address.size() > 0) {
+                    String currentLocationAddress = address.get(0).getAddressLine(0).toString();
+                    nowAddress = currentLocationAddress;
+                }
+            }
+
+        } catch (IOException e) {
+            Toast.makeText(getContext(), "Cannot load the address.", Toast.LENGTH_LONG).show();
+            e.printStackTrace();
+        }
+        return nowAddress;
     }
 }
