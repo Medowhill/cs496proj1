@@ -20,7 +20,8 @@
 
             <LinearLayout
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content">
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="@dimen/free_cardView_imageView_margin">
 
                 <TextView
                     android:id="@+id/free_item_textView_content"
@@ -43,7 +44,6 @@
                 android:layout_width="match_parent"
                 android:layout_height="@dimen/free_cardView_imageView_height"
                 android:layout_marginBottom="@dimen/free_cardView_imageView_margin"
-                android:layout_marginTop="@dimen/free_cardView_imageView_margin"
                 android:scaleType="fitCenter"
                 android:visibility="gone" />
 
