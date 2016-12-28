@@ -4,12 +4,13 @@ package com.group2.team.project1;
 public class FreeItem {
 
     private long date;
-    private String content;
+    private String content, address;
     private boolean photo;
 
-    public FreeItem(long date, String content, boolean photo) {
+    public FreeItem(long date, String content, String address, boolean photo) {
         this.date = date;
         this.content = content;
+        this.address = address;
         this.photo = photo;
     }
 
@@ -35,5 +36,13 @@ public class FreeItem {
 
     public void setPhoto(boolean photo) {
         this.photo = photo;
+    }
+
+    public String getAddress() {
+        return address;
+    }
+
+    public void setAddress(String address) {
+        this.address = address;
     }
 }

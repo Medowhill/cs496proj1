@@ -62,6 +62,7 @@ public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
         final FreeItem item = items.get(position);
         holder.textViewDate.setText(format.format(new Date(item.getDate())));
         holder.textViewContent.setText(item.getContent());
+        holder.textViewAddress.setText(item.getAddress());
         holder.imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -105,7 +106,7 @@ public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
     class ViewHolder extends RecyclerView.ViewHolder {
 
         ImageView imageView;
-        TextView textViewDate, textViewContent;
+        TextView textViewDate, textViewContent, textViewAddress;
         ImageButton imageButton;
 
         ViewHolder(View view) {
@@ -113,6 +114,7 @@ public class FreeAdapter extends RecyclerView.Adapter<FreeAdapter.ViewHolder> {
             imageView = (ImageView) view.findViewById(R.id.free_item_imageView);
             textViewDate = (TextView) view.findViewById(R.id.free_item_textView_date);
             textViewContent = (TextView) view.findViewById(R.id.free_item_textView_content);
+            textViewAddress = (TextView) view.findViewById(R.id.free_item_textView_address);
             imageButton = (ImageButton) view.findViewById(R.id.free_item_imageButton);
         }
     }

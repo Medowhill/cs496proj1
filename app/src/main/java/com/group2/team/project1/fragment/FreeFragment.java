@@ -42,6 +42,8 @@ import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
 import com.group2.team.project1.ActivityResultEvent;
 import com.group2.team.project1.EventBus;
@@ -67,9 +69,10 @@ import java.util.List;
 import java.util.Locale;
 
 // Fragment class for C tab (Free)
-public class FreeFragment extends Fragment implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+public class FreeFragment extends Fragment implements GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
-    final public static int REQUEST_CAMERA = 1, REQUEST_GALLERY = 2, PERMISSION_REQUEST_STORAGE = 3, PERMISSION_REQUEST_LOCATION = 4;
+    final public static int REQUEST_CAMERA = 1, REQUEST_GALLERY = 2, REQUEST_SHARE = 0;
+    final public static int PERMISSION_REQUEST_STORAGE = 1, PERMISSION_REQUEST_LOCATION = 2, PERMISSION_REQUEST_GALLERY = 3;
     final private static int PHOTO_WIDTH_MAX = 1440, PHOTO_HEIGHT_MAX = 1440;
     final private static String FILE_NAME = "FreeFragmentDataSave";
 
@@ -86,8 +89,9 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
     private boolean photo = false, searching = false;
     private int position;
     private Bitmap bitmap;
-    private String currentPath;
+    private String currentPath, address;
     private SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd");
+    private File fileToDelete;
 
     public FreeFragment() {
         items = new ArrayList<>();
@@ -101,6 +105,7 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        address = getString(R.string.free_unknown_location);
 
         String data = readFile();
         JSONArray array = null;
@@ -118,7 +123,7 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
             for (int i = 0; i < array.length(); i++) {
                 try {
                     JSONObject object = array.getJSONObject(i);
-                    FreeItem item = new FreeItem(object.getLong("date"), object.getString("content"), object.getBoolean("photo"));
+                    FreeItem item = new FreeItem(object.getLong("date"), object.getString("content"), object.getString("address"), object.getBoolean("photo"));
                     items.add(item);
                 } catch (JSONException e) {
                     e.printStackTrace();
@@ -133,18 +138,30 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
     @Override
     public void onConnected(@Nullable Bundle bundle) {
         Log.i("cs496", "connected");
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED)
             requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION}, PERMISSION_REQUEST_LOCATION);
-        } else
-            getLocationAfterGetPermission();
+        else
+            startLocationUpdates();
     }
 
     @Override
     public void onConnectionSuspended(int i) {
+        Log.i("cs496", "sus");
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+        Log.i("cs496", "fail");
+    }
+
+    @Override
+    public void onLocationChanged(final Location location) {
+        new Thread() {
+            @Override
+            public void run() {
+                address = getAddress(location);
+            }
+        }.start();
     }
 
     @Override
@@ -199,7 +216,7 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
             @Override
             public void onClick(View v) {
                 long time = Calendar.getInstance().getTime().getTime();
-                FreeItem item = new FreeItem(time, editText.getText().toString(), photo);
+                FreeItem item = new FreeItem(time, editText.getText().toString(), address, photo);
                 if (photo) {
                     try {
                         FileOutputStream fos = getActivity().openFileOutput(time + "", Activity.MODE_PRIVATE);
@@ -251,10 +268,11 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
                     buttonGallery.setOnClickListener(new View.OnClickListener() {
                         @Override
                         public void onClick(View v) {
-                            Intent intent = new Intent(Intent.ACTION_PICK);
-                            intent.setType("image/*");
                             dialog.dismiss();
-                            ActivityCompat.startActivityForResult(getActivity(), intent, REQUEST_GALLERY, null);
+                            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED)
+                                requestPermissions(new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, PERMISSION_REQUEST_GALLERY);
+                            else
+                                getPhotoFromGallery();
                         }
                     });
                 } else {
@@ -342,14 +360,29 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
     public void onActivityCreated(@Nullable Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
         EventBus.getInstance().register(this);
-        googleApiClient.connect();
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        new Thread() {
+            @Override
+            public void run() {
+                googleApiClient.connect();
+            }
+        }.start();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        googleApiClient.disconnect();
     }
 
     @Override
     public void onDestroyView() {
         super.onDestroyView();
         EventBus.getInstance().unregister(this);
-        googleApiClient.disconnect();
     }
 
     @Override
@@ -362,6 +395,7 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
             try {
                 object.put("date", item.getDate());
                 object.put("content", item.getContent());
+                object.put("address", item.getAddress());
                 object.put("photo", item.isPhoto());
                 array.put(object);
             } catch (JSONException e) {
@@ -380,7 +414,11 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
                 break;
             case PERMISSION_REQUEST_LOCATION:
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
-                    getLocationAfterGetPermission();
+                    startLocationUpdates();
+                break;
+            case PERMISSION_REQUEST_GALLERY:
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED)
+                    getPhotoFromGallery();
                 break;
         }
     }
@@ -394,18 +432,19 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
-            case FreeFragment.REQUEST_CAMERA:
+            case REQUEST_CAMERA:
                 if (resultCode == Activity.RESULT_OK) {
                     Bitmap tmp = BitmapFactory.decodeFile(currentPath);
                     if (tmp == null) {
                         Toast.makeText(getContext(), "Fail to load the photo", Toast.LENGTH_LONG).show();
                         return;
                     }
+                    new File(currentPath).delete();
                     setPhoto(tmp);
                     setButtonPhoto();
                 }
                 break;
-            case FreeFragment.REQUEST_GALLERY:
+            case REQUEST_GALLERY:
                 if (resultCode == Activity.RESULT_OK) {
                     try {
                         Uri imageUri = data.getData();
@@ -417,7 +456,18 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
                     }
                 }
                 break;
+            case REQUEST_SHARE:
+                Log.i("cs496", "after share");
+                boolean res = fileToDelete.delete();
+                Log.i("cs496", res + "");
+                break;
         }
+    }
+
+    private void getPhotoFromGallery() {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        ActivityCompat.startActivityForResult(getActivity(), intent, REQUEST_GALLERY, null);
     }
 
     private void setPhoto(Bitmap tmp) {
@@ -508,6 +558,7 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
                             } catch (IOException e) {
                                 e.printStackTrace();
                             }
+                            new File(getContext().getFilesDir() + File.separator + item.getDate()).delete();
                             buttonPhoto.setBackgroundResource(R.drawable.photo_remove);
                             photo = true;
                         } else {
@@ -517,6 +568,8 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
                         break;
                     case 1:
                         FreeItem itm = items.remove(position);
+                        if (itm.isPhoto())
+                            new File(getContext().getFilesDir() + File.separator + itm.getDate()).delete();
                         if (searching)
                             savedItems.remove(itm);
                         recyclerView.getAdapter().notifyDataSetChanged();
@@ -540,16 +593,6 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
         builder.show();
     }
 
-    public void getLocationAfterGetPermission() {
-        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            Location location = LocationServices.FusedLocationApi.getLastLocation(googleApiClient);
-            if (location != null) {
-                String address = getAddress(location.getLatitude(), location.getLongitude());
-                Log.i("cs496", address);
-            }
-        }
-    }
-
     public void sharePhotoAfterGetPermission(int position) {
         Intent intent = new Intent(android.content.Intent.ACTION_SEND);
         intent.setType("image/jpeg");
@@ -566,37 +609,41 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
         if (arr == null)
             return;
 
-        File f = new File(Environment.getExternalStorageDirectory() + File.separator + "tmp" + Calendar.getInstance().getTime().getTime());
+        fileToDelete = new File(Environment.getExternalStorageDirectory() + File.separator + "tmp" + Calendar.getInstance().getTime().getTime());
         try {
-            f.createNewFile();
-            FileOutputStream fos = new FileOutputStream(f);
+            fileToDelete.createNewFile();
+            FileOutputStream fos = new FileOutputStream(fileToDelete);
             fos.write(arr);
             fos.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(f));
-        getActivity().startActivity(Intent.createChooser(intent, getString(R.string.free_share_photo)));
+        intent.putExtra(Intent.EXTRA_STREAM, Uri.fromFile(fileToDelete));
+        getActivity().startActivityForResult(Intent.createChooser(intent, getString(R.string.free_share_photo)), REQUEST_SHARE);
     }
 
-    private String getAddress(double latitude, double longitude) {
-        String nowAddress = "Cannot load the address";
+    private String getAddress(Location location) {
+        String nowAddress = getString(R.string.free_unknown_location);
         Geocoder geocoder = new Geocoder(getContext(), Locale.KOREA);
-        List<Address> address;
+        List<Address> addresses;
         try {
             if (geocoder != null) {
-                address = geocoder.getFromLocation(latitude, longitude, 1);
-                if (address != null && address.size() > 0) {
-                    String currentLocationAddress = address.get(0).getAddressLine(0).toString();
+                addresses = geocoder.getFromLocation(location.getLatitude(), location.getLongitude(), 1);
+                if (addresses != null && addresses.size() > 0) {
+                    String currentLocationAddress = addresses.get(0).getAddressLine(0).toString();
                     nowAddress = currentLocationAddress;
                 }
             }
 
         } catch (IOException e) {
-            Toast.makeText(getContext(), "Cannot load the address.", Toast.LENGTH_LONG).show();
             e.printStackTrace();
         }
         return nowAddress;
+    }
+
+    private void startLocationUpdates() {
+        if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED)
+            LocationServices.FusedLocationApi.requestLocationUpdates(googleApiClient, new LocationRequest(), this);
     }
 }

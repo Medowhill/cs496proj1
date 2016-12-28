@@ -27,6 +27,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
+                    android:autoLink="email|phone|web"
                     android:textSize="@dimen/free_cardView_content_textSize" />
 
                 <ImageButton
@@ -45,6 +46,12 @@
                 android:layout_marginTop="@dimen/free_cardView_imageView_margin"
                 android:scaleType="fitCenter"
                 android:visibility="gone" />
+
+            <TextView
+                android:id="@+id/free_item_textView_address"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right" />
 
             <TextView
                 android:id="@+id/free_item_textView_date"

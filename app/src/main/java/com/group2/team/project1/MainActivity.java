@@ -48,9 +48,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         switch (requestCode) {
             case FreeFragment.REQUEST_CAMERA:
-                EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
-                break;
             case FreeFragment.REQUEST_GALLERY:
+            case FreeFragment.REQUEST_SHARE:
                 EventBus.getInstance().post(ActivityResultEvent.create(requestCode, resultCode, data));
                 break;
             case REQUEST_CONTACT_ADD:
@@ -64,11 +63,11 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
             case REQUEST_CONTACT_MODIFY:
-                if(resultCode == RESULT_OK){
+                if (resultCode == RESULT_OK) {
                     Fragment fragment = mSectionsPagerAdapter.fragments[0];
 
-                    if(fragment != null){
-                        ((PhoneNumberFragment)fragment).addData(data.getBundleExtra("data"));
+                    if (fragment != null) {
+                        ((PhoneNumberFragment) fragment).addData(data.getBundleExtra("data"));
                     }
                 }
         }
