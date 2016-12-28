@@ -164,6 +164,7 @@ public class PhoneNumberFragment extends Fragment {
                 newBundle.putString("phoneNumber", contact.mPhoneNumber);
                 newBundle.putInt("position", position);
                 newBundle.putString("photoDir", contact.mPhotoPath);
+                newBundle.putBoolean("isModifying", true);
                 newIntent.putExtra("data", newBundle);
                 getActivity().startActivityForResult(newIntent, MainActivity.REQUEST_CONTACT_MODIFY);
             }

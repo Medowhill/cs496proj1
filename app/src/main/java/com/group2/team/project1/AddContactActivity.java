@@ -13,7 +13,9 @@ import android.provider.MediaStore;
 import android.support.v4.content.FileProvider;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import java.io.File;
@@ -32,6 +34,11 @@ public class AddContactActivity extends Activity {
     private int modifyPosition = -1;
     private ImageView mProfile;
     private Uri mPhotoURI = null;
+    private boolean isModifying = false;
+    private ImageButton mCameraButton;
+    private Button mAddCommitButton;
+    private Button mCancelButton;
+    private Button mEditButton;
     String mCurrentPhotoPath = null;
 
 
@@ -44,6 +51,10 @@ public class AddContactActivity extends Activity {
 
         mNameEt = (EditText) findViewById(R.id.name_add_edit);
         mPhonenumberEt = (EditText) findViewById(R.id.phonenumber_add_edit);
+        mCameraButton = (ImageButton) findViewById(R.id.new_pic_add);
+        mCancelButton = (Button) findViewById(R.id.addCancelButton);
+        mAddCommitButton = (Button) findViewById(R.id.addCommitButton);
+        mEditButton = (Button) findViewById(R.id.addEditButton);
         Intent gotIntent = getIntent();
         if (gotIntent != null) {
             Bundle gotBundle = gotIntent.getBundleExtra("data");
@@ -51,6 +62,7 @@ public class AddContactActivity extends Activity {
                 mNameEt.setText(gotBundle.getString("name"));
                 mPhonenumberEt.setText(gotBundle.getString("phoneNumber"));
                 modifyPosition = gotBundle.getInt("position");
+                isModifying = gotBundle.getBoolean("isModifying");
                 if (!gotBundle.getString("photoDir").equals("")) {
                     //mCurrentPhotoPath = gotBundle.getString("photoDir");
                     mPhotoURI = Uri.parse(gotBundle.getString("photoDir"));
@@ -65,6 +77,15 @@ public class AddContactActivity extends Activity {
             mProfile.setImageResource(R.drawable.ic_face_black_48dp);
         } else {
             setPic();
+        }
+        if(isModifying){
+            mNameEt.setEnabled(false);
+            mPhonenumberEt.setEnabled(false);
+            mProfile.setEnabled(false);
+            mAddCommitButton.setEnabled(false);
+            mAddCommitButton.setVisibility(View.INVISIBLE);
+            mCameraButton.setEnabled(false);
+
         }
 
     }
@@ -193,7 +214,19 @@ public class AddContactActivity extends Activity {
                 if(newIntent.resolveActivity(getPackageManager()) != null){
                     startActivityForResult(newIntent, REQUEST_IMAGE_SEARCH);
                 }
-
+                break;
+            }
+            case R.id.addEditButton:
+            {
+                mNameEt.setEnabled(true);
+                mPhonenumberEt.setEnabled(true);
+                mProfile.setEnabled(true);
+                mAddCommitButton.setEnabled(true);
+                mAddCommitButton.setVisibility(View.VISIBLE);
+                mCameraButton.setEnabled(true);
+                mEditButton.setEnabled(false);
+                mEditButton.setVisibility(View.INVISIBLE);
+                break;
             }
         }
     }
