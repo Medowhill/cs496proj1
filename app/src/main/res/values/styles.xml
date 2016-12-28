@@ -17,11 +17,9 @@
 
     <style name="AppTheme.PopupOverlay" parent="ThemeOverlay.AppCompat.Light" />
 
-    <style name="TransparentDialog" parent="Base.V21.Theme.AppCompat.Dialog">
+    <style name="TransparentDialog" parent="Theme.AppCompat.Dialog">
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@android:color/transparent</item>
     </style>
-
-    <style name="ListDialog" parent="Base.V21.Theme.AppCompat.Light.Dialog" />
 
 </resources>
