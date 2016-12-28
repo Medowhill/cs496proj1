@@ -1,6 +1,9 @@
 package com.group2.team.project1;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -10,11 +13,14 @@ import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
-import android.widget.Toast;
+import android.view.View;
+import android.widget.ImageView;
 
 import com.group2.team.project1.fragment.FreeFragment;
 import com.group2.team.project1.fragment.GalleryFragment;
 import com.group2.team.project1.fragment.PhoneNumberFragment;
+
+import uk.co.senab.photoview.PhotoViewAttacher;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -24,6 +30,9 @@ public class MainActivity extends AppCompatActivity {
     private SectionsPagerAdapter mSectionsPagerAdapter;
 
     private ViewPager mViewPager;
+    private ImageView imageView;
+    private PhotoViewAttacher attacher;
+    private int prevOption;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,6 +51,10 @@ public class MainActivity extends AppCompatActivity {
 
         TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
         tabLayout.setupWithViewPager(mViewPager);
+
+        imageView = (ImageView) findViewById(R.id.main_imageView);
+        imageView.setBackgroundColor(Color.rgb(0, 0, 0));
+        attacher = new PhotoViewAttacher(imageView);
     }
 
     @Override
@@ -70,6 +83,31 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        if (imageView.getVisibility() == View.INVISIBLE)
+            super.onBackPressed();
+        else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+                View decorView = getWindow().getDecorView();
+                decorView.setSystemUiVisibility(prevOption);
+            }
+            imageView.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    public void setImageView(Bitmap bitmap) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+            View decorView = getWindow().getDecorView();
+            prevOption = decorView.getSystemUiVisibility();
+            decorView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_FULLSCREEN);
+        }
+
+        imageView.setVisibility(View.VISIBLE);
+        imageView.setImageBitmap(bitmap);
+        attacher.update();
     }
 
     public class SectionsPagerAdapter extends FragmentStatePagerAdapter {

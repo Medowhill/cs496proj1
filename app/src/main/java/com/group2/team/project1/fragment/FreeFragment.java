@@ -232,6 +232,7 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
                 editText.setText("");
                 items.add(0, item);
                 recyclerView.getAdapter().notifyDataSetChanged();
+                recyclerView.getLayoutManager().scrollToPosition(0);
                 recyclerView.startAnimation(animation);
             }
         });
@@ -334,6 +335,26 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
                         } else if (calendarView2.getDate() > Calendar.getInstance().getTime().getTime()) {
                             Toast.makeText(getContext(), "Invalid date", Toast.LENGTH_LONG).show();
                             calendarView2.setDate(Calendar.getInstance().getTime().getTime());
+                        }
+                    }
+                });
+                editText.addTextChangedListener(new TextWatcher() {
+                    String previousString = "";
+
+                    @Override
+                    public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    }
+
+                    @Override
+                    public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+                        previousString = s.toString();
+                    }
+
+                    @Override
+                    public void afterTextChanged(Editable s) {
+                        if (editText.getLineCount() > 1) {
+                            editText.setText(previousString);
+                            editText.setSelection(editText.length());
                         }
                     }
                 });
@@ -542,29 +563,20 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
                             Toast.makeText(getContext(), "You cannot edit the memo in the search mode.", Toast.LENGTH_LONG).show();
                             return;
                         }
-                        FreeItem item = items.remove(position);
-                        recyclerView.getAdapter().notifyDataSetChanged();
 
-                        editText.setText(item.getContent());
-                        if (item.isPhoto()) {
-                            if (bitmap != null && !bitmap.isRecycled())
-                                bitmap.recycle();
-                            try {
-                                FileInputStream fis = getContext().openFileInput(item.getDate() + "");
-                                byte[] arr = new byte[fis.available()];
-                                fis.read(arr);
-                                bitmap = BitmapFactory.decodeByteArray(arr, 0, arr.length);
-                                fis.close();
-                            } catch (IOException e) {
-                                e.printStackTrace();
-                            }
-                            new File(getContext().getFilesDir() + File.separator + item.getDate()).delete();
-                            buttonPhoto.setBackgroundResource(R.drawable.photo_remove);
-                            photo = true;
-                        } else {
-                            buttonPhoto.setBackgroundResource(R.drawable.photo_add);
-                            photo = false;
-                        }
+                        if (editText.getText().toString().length() > 0 || photo) {
+                            AlertDialog.Builder builder1 = new AlertDialog.Builder(getActivity(), R.style.ListDialog);
+                            builder1.setMessage(R.string.free_edit_alert);
+                            builder1.setNegativeButton(R.string.free_edit_negative, null);
+                            builder1.setPositiveButton(R.string.free_edit_positive, new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    editMemo(position);
+                                }
+                            });
+                            builder1.show();
+                        } else
+                            editMemo(position);
                         break;
                     case 1:
                         FreeItem itm = items.remove(position);
@@ -591,6 +603,32 @@ public class FreeFragment extends Fragment implements GoogleApiClient.Connection
             }
         });
         builder.show();
+    }
+
+    private void editMemo(int position) {
+        FreeItem item = items.remove(position);
+        recyclerView.getAdapter().notifyDataSetChanged();
+
+        editText.setText(item.getContent());
+        if (item.isPhoto()) {
+            if (bitmap != null && !bitmap.isRecycled())
+                bitmap.recycle();
+            try {
+                FileInputStream fis = getContext().openFileInput(item.getDate() + "");
+                byte[] arr = new byte[fis.available()];
+                fis.read(arr);
+                bitmap = BitmapFactory.decodeByteArray(arr, 0, arr.length);
+                fis.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            new File(getContext().getFilesDir() + File.separator + item.getDate()).delete();
+            buttonPhoto.setBackgroundResource(R.drawable.photo_remove);
+            photo = true;
+        } else {
+            buttonPhoto.setBackgroundResource(R.drawable.photo_add);
+            photo = false;
+        }
     }
 
     public void sharePhotoAfterGetPermission(int position) {
