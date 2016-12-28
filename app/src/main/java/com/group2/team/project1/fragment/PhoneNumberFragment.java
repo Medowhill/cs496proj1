@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.EditText;
+import android.widget.Filter;
 import android.widget.ListView;
 import android.widget.TextView;
 
@@ -98,7 +99,12 @@ public class PhoneNumberFragment extends Fragment {
                     {
                         int position = (Integer) v.getTag();
                         Contact contact = mContactsAdapter.getItem(position);
+                        Log.i("cs406", "position " + position);
+
                         mContactsAdapter.remove(contact);
+                        contactsList.remove(contact);
+                        mContactsAdapter.notifyDataSetChanged();
+                        mContactsAdapter.getFilter().filter(mSearchBox.getText().toString());
                         break;
                     }
                     case R.id.contacts_item_SMS_button:
@@ -126,7 +132,8 @@ public class PhoneNumberFragment extends Fragment {
         newContact.mName = bundle.getString("name");
         newContact.mPhoneNumber = bundle.getString("phoneNumber");
         int modifyPosition = bundle.getInt("position");
-        if(modifyPosition != -1){
+        boolean isModify = bundle.getBoolean("isModifying");
+        if(isModify && modifyPosition != -1){
             Contact oldContact = mContactsAdapter.getItem(modifyPosition);
             mContactsAdapter.remove(oldContact);
         }
@@ -149,12 +156,16 @@ public class PhoneNumberFragment extends Fragment {
 
         mListView = (ListView) rootView.findViewById(R.id.listView_phone);
         mListView.setAdapter(mContactsAdapter);
+        //mListView.setTextFilterEnabled(true);
         addButton = (FloatingActionButton) rootView.findViewById(R.id.addButton);
 
         addButton.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v){
                 Intent intent = new Intent(getActivity(), AddContactActivity.class);
+                Bundle bundle = new Bundle();
+                bundle.putString("name", mSearchBox.getText().toString());
+                intent.putExtra("data", bundle);
                 getActivity().startActivityForResult(intent, MainActivity.REQUEST_CONTACT_ADD);
             }
         });
@@ -183,7 +194,11 @@ public class PhoneNumberFragment extends Fragment {
 
             @Override
             public void onTextChanged(CharSequence s, int start, int before, int count) {
-                mContactsAdapter.getFilter().filter(s);
+                if(s.length() != 0) {
+                    mContactsAdapter.getFilter().filter(s);
+                } else{
+                    mContactsAdapter.getFilter().filter("");
+                }
             }
 
             @Override

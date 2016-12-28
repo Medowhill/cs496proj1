@@ -24,12 +24,13 @@ import java.util.List;
  */
 
 public class ContactsAdapter extends ArrayAdapter<Contact> implements Filterable {
-    //private List<Contact> original;
+    private List<Contact> original;
+
     private View.OnClickListener mOnClickListener;
     public ContactsAdapter(Context context, int resources, int textViewResourceId, List<Contact> data, View.OnClickListener onClickListener){
         super(context, resources, textViewResourceId, data);
-        //original = new ArrayList<>();
-        //original.addAll(data);
+        original = new ArrayList<>();
+        original.addAll(data);
         mOnClickListener = onClickListener;
     }
 
@@ -38,7 +39,22 @@ public class ContactsAdapter extends ArrayAdapter<Contact> implements Filterable
         ImageButton mDialButton;
         ImageButton mRemoveButton;
         ImageButton mSMSButton;
+        int realPosition;
     }
+
+    @Override
+    public void remove(Contact c){
+        super.remove(c);
+        original.remove(c);
+    }
+
+    public void add(Contact c){
+        super.add(c);
+        original.add(c);
+    }
+
+
+
 
 
 
@@ -54,10 +70,13 @@ public class ContactsAdapter extends ArrayAdapter<Contact> implements Filterable
             viewHolder.mNameTv = (TextView) itemLayout.findViewById(R.id.contacts_item_name_text);
             viewHolder.mDialButton = (ImageButton) itemLayout.findViewById(R.id.contacts_item_dial_button);
             viewHolder.mDialButton.setFocusable(false);
+
             viewHolder.mRemoveButton = (ImageButton) itemLayout.findViewById(R.id.contacts_item_remove_button);
             viewHolder.mRemoveButton.setFocusable(false);
+
             viewHolder.mSMSButton = (ImageButton) itemLayout.findViewById(R.id.contacts_item_SMS_button);
             viewHolder.mSMSButton.setFocusable(false);
+            viewHolder.realPosition = position;
             itemLayout.setTag(viewHolder);
         }
 
@@ -76,7 +95,7 @@ public class ContactsAdapter extends ArrayAdapter<Contact> implements Filterable
         return itemLayout;
     }
 
-    /*@Override
+    @Override
     public Filter getFilter(){
         return new Filter(){
             @Override
@@ -96,6 +115,7 @@ public class ContactsAdapter extends ArrayAdapter<Contact> implements Filterable
                     results.values = list;
                     results.count = list.size();
                 } else {
+
                     results.values = original;
                     results.count = original.size();
                 }
@@ -110,6 +130,6 @@ public class ContactsAdapter extends ArrayAdapter<Contact> implements Filterable
 
             }
         };
-    }*/
+    }
 }
 

@@ -61,7 +61,7 @@ public class AddContactActivity extends Activity {
                 mPhonenumberEt.setText(gotBundle.getString("phoneNumber"));
                 modifyPosition = gotBundle.getInt("position");
                 isModifying = gotBundle.getBoolean("isModifying");
-                if (!gotBundle.getString("photoDir").equals("")) {
+                if (gotBundle.getString("photoDir") != null && !gotBundle.getString("photoDir").equals("")) {
                     //mCurrentPhotoPath = gotBundle.getString("photoDir");
                     mPhotoURI = Uri.parse(gotBundle.getString("photoDir"));
                     //Log.i("cs496: ocCreate", mCurrentPhotoPath);
@@ -175,7 +175,7 @@ public class AddContactActivity extends Activity {
                 }
 
                 newBundle.putInt("position", modifyPosition);
-
+                newBundle.putBoolean("isModifying", isModifying);
 
                 Intent newIntent = new Intent(this, MainActivity.class);
                 newIntent.putExtra("data", newBundle);
