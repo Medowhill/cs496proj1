@@ -13,26 +13,25 @@
             android:layout_height="wrap_content">
 
             <ImageView
+                android:id="@+id/pic_add"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:minWidth="80dp"
+                android:layout_centerHorizontal="true"
+                android:maxHeight="80dp"
                 android:maxWidth="80dp"
                 android:minHeight="80dp"
-                android:maxHeight="80dp"
-                android:id="@+id/pic_add"
-                android:layout_centerHorizontal="true"
-                android:onClick="onClick"
-                />
+                android:minWidth="80dp"
+                android:onClick="onClick" />
 
             <EditText
                 android:id="@+id/name_add_edit"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_below="@id/pic_add"
                 android:layout_marginLeft="20dp"
                 android:layout_marginRight="20dp"
                 android:layout_marginTop="40dp"
-                android:hint="Name"
-                android:layout_below="@id/pic_add"/>
+                android:hint="Name" />
 
             <EditText
                 android:id="@+id/phonenumber_add_edit"

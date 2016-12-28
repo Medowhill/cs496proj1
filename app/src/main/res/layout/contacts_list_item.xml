@@ -1,28 +1,30 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:orientation="horizontal" android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal">
 
     <TextView
+        android:id="@+id/contacts_item_name_text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart = "20dp"
-        android:layout_marginLeft = "20dp"
+        android:layout_marginLeft="20dp"
+        android:layout_marginStart="20dp"
         android:layout_weight="1"
-        android:textSize="25sp"
-        android:id = "@+id/contacts_item_name_text"/>
-    <ImageButton
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/contacts_item_edit_button"
-        app:srcCompat="@android:drawable/ic_menu_edit"
-        android:focusable="false"/>
+        android:textSize="25sp" />
 
     <ImageButton
+        android:id="@+id/contacts_item_edit_button"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:focusable="false"
+        app:srcCompat="@android:drawable/ic_menu_edit" />
+
+    <ImageButton
         android:id="@+id/contacts_item_remove_button"
-        app:srcCompat="@android:drawable/ic_delete"
-        android:focusable="false"/>
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:focusable="false"
+        app:srcCompat="@android:drawable/ic_delete" />
 </LinearLayout>
